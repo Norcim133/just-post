@@ -23,13 +23,13 @@ const PlatformPreview = ({ text, platform, platformConfig }: { text: string, pla
                     {overflowText}
                     </span>
                 )}
-
             </div>
-                <div className="flex content-start items-center gap-2 m-4 mb-3 justify-between">
+
+            <div className="flex content-start items-end gap-2 m-4 mb-1 justify-between">
                 <span className="text-sky-500">{platform.icon}</span>
                 <span className="font-semibold">{platform.name}</span>
                 <span className={`text-sm ${isOverLimit ? 'text-red-500' : 'text-gray-500'}`}>
-                    {text.length}/{LIMIT}
+                {text.length}/{LIMIT}
                 </span>
             </div>
 
