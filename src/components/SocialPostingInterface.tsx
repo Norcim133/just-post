@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Settings, Send, Check } from 'lucide-react';
 import { BlueSkyService } from '../services/bluesky';
 import { StorageService } from '../services/storage';
-import { BlueSkyCredentials, PLATFORM_CONFIGS } from '../types';
+import { BlueSkyCredentials, PLATFORM_CONFIGS, PlatformConfig } from '../types';
 import LoginModal from './LoginModal';
 import PlatformPreview from './PostPreview';
 
 const SocialPostingInterface = () => {
   const [postText, setPostText] = useState('');
+  const [addedPlatforms, setAddedPlatforms] = useState<PlatformConfig[]>([
+    PLATFORM_CONFIGS.bluesky  // Direct reference to the config object
+  ]);
   const [selectedPlatforms, setSelectedPlatforms] = useState({
     bluesky: true,
   });
@@ -87,9 +90,9 @@ const SocialPostingInterface = () => {
           <h3 className="text-sm font-semibold text-slate-700 mb-4 tracking-wide uppercase">Connected Accounts</h3>
 
           <div className="space-y-3">
-            {Object.values(PLATFORM_CONFIGS).map(platformConfig => (
+            {addedPlatforms.map(platformConfig => (
               <div 
-                key={platformConfig.id}
+                key={platformConfig}
                 className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all duration-200 cursor-pointer bg-white"
               >
                 <div className={`w-10 h-10 ${platformConfig.color} rounded-xl flex items-center justify-center text-white text-sm font-semibold shadow-sm`}>
@@ -157,7 +160,7 @@ const SocialPostingInterface = () => {
                   disabled={!postText.trim() || isPosting}
                 >
                   <Send size={18} />
-                  {isPosting ? 'Posting...' : isAuthenticated ? 'Post to BlueSky' : 'Login & Post'}
+                  {isPosting ? 'Posting...' : isAuthenticated ? 'Post To All' : 'Login & Post'}
                 </button>
               </div>
             </div>
@@ -165,7 +168,7 @@ const SocialPostingInterface = () => {
 
           {/* Platform Status */}
           <div className="mt-6 flex flex-wrap gap-3">
-            {Object.values(PLATFORM_CONFIGS).map(platformConfig => (
+            {addedPlatforms.map(platformConfig => (
               selectedPlatforms[platformConfig.id as keyof typeof selectedPlatforms] && (
                 <div key={platformConfig.id} className="flex items-center gap-3 px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-medium shadow-sm">
                   <div className={`w-5 h-5 ${platformConfig.color} rounded-lg flex items-center justify-center text-white text-xs font-semibold`}>
@@ -187,12 +190,13 @@ const SocialPostingInterface = () => {
         <h3 className="pt-10 text-sm font-semibold text-slate-700 mb-4 tracking-wide uppercase">Post Previews</h3>
           <hr className="pt-5 border-gray-300" />
 
-        {Object.values(PLATFORM_CONFIGS).map(platformConfig => 
+        {addedPlatforms.map(platformConfig => (
+          selectedPlatforms[platformConfig.id as keyof typeof selectedPlatforms] && (
           <PlatformPreview
           text={postText}
           platformConfig={platformConfig}
           />
-        )}
+        )))}
 
     </div>
       </div>
