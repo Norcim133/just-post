@@ -16,9 +16,6 @@ const SocialPostingInterface = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [blueSkyService] = useState(new BlueSkyService());
 
-  const platforms = [
-    { id: 'bluesky', name: 'BlueSky', color: 'bg-sky-500', icon: '🦋' },
-  ];
 
   useEffect(() => {
     const initAuth = async () => {
@@ -90,27 +87,27 @@ const SocialPostingInterface = () => {
           <h3 className="text-sm font-semibold text-slate-700 mb-4 tracking-wide uppercase">Connected Accounts</h3>
 
           <div className="space-y-3">
-            {platforms.map(platform => (
+            {Object.values(PLATFORM_CONFIGS).map(platformConfig => (
               <div 
-                key={platform.id}
+                key={platformConfig.id}
                 className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all duration-200 cursor-pointer bg-white"
               >
-                <div className={`w-10 h-10 ${platform.color} rounded-xl flex items-center justify-center text-white text-sm font-semibold shadow-sm`}>
-                  {platform.icon}
+                <div className={`w-10 h-10 ${platformConfig.color} rounded-xl flex items-center justify-center text-white text-sm font-semibold shadow-sm`}>
+                  {platformConfig.icon}
                 </div>
-                <span className="flex-1 font-medium text-slate-700" style={{ fontSize: '15px', fontWeight: '500' }}>{platform.name}</span>
+                <span className="flex-1 font-medium text-slate-700" style={{ fontSize: '15px', fontWeight: '500' }}>{platformConfig.name}</span>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    togglePlatform(platform.id);
+                    togglePlatform(platformConfig.id);
                   }}
                   className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
-                    selectedPlatforms[platform.id as keyof typeof selectedPlatforms]
+                    selectedPlatforms[platformConfig.id as keyof typeof selectedPlatforms]
                       ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm' 
                       : 'border-slate-300 hover:border-slate-400 bg-white'
                   }`}
                 >
-                  {selectedPlatforms[platform.id as keyof typeof selectedPlatforms] && <Check size={14} />}
+                  {selectedPlatforms[platformConfig.id as keyof typeof selectedPlatforms] && <Check size={14} />}
                 </button>
               </div>
             ))}
@@ -168,13 +165,13 @@ const SocialPostingInterface = () => {
 
           {/* Platform Status */}
           <div className="mt-6 flex flex-wrap gap-3">
-            {platforms.map(platform => (
-              selectedPlatforms[platform.id as keyof typeof selectedPlatforms] && (
-                <div key={platform.id} className="flex items-center gap-3 px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-medium shadow-sm">
-                  <div className={`w-5 h-5 ${platform.color} rounded-lg flex items-center justify-center text-white text-xs font-semibold`}>
-                    {platform.icon}
+            {Object.values(PLATFORM_CONFIGS).map(platformConfig => (
+              selectedPlatforms[platformConfig.id as keyof typeof selectedPlatforms] && (
+                <div key={platformConfig.id} className="flex items-center gap-3 px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-medium shadow-sm">
+                  <div className={`w-5 h-5 ${platformConfig.color} rounded-lg flex items-center justify-center text-white text-xs font-semibold`}>
+                    {platformConfig.icon}
                   </div>
-                  {platform.name}
+                  {platformConfig.name}
                   <Check size={14} />
                 </div>
               )
@@ -189,19 +186,16 @@ const SocialPostingInterface = () => {
 
         <h3 className="pt-10 text-sm font-semibold text-slate-700 mb-4 tracking-wide uppercase">Post Previews</h3>
           <hr className="pt-5 border-gray-300" />
-        {platforms.map(platform => 
-      
-      <PlatformPreview
-      text={postText}
-      platform={platform}
-      platformConfig={PLATFORM_CONFIGS[platform.id]}
-      />
-      
-    )}
+
+        {Object.values(PLATFORM_CONFIGS).map(platformConfig => 
+          <PlatformPreview
+          text={postText}
+          platformConfig={platformConfig}
+          />
+        )}
+
     </div>
       </div>
-
-
 
       <LoginModal
         isOpen={showLogin}

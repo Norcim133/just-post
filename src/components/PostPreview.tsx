@@ -1,7 +1,7 @@
 
-import { Platform, PlatformConfig } from '../types';
+import { PlatformConfig } from '../types';
 
-const PlatformPreview = ({ text, platform, platformConfig }: { text: string, platform: Platform, platformConfig: PlatformConfig }) => {
+const PlatformPreview = ({ text, platformConfig }: { text: string, platformConfig: PlatformConfig }) => {
     const LIMIT = platformConfig.charLimit;
     const isOverLimit = text.length > LIMIT;
     const displayText = text.slice(0, LIMIT);
@@ -12,7 +12,7 @@ const PlatformPreview = ({ text, platform, platformConfig }: { text: string, pla
 
             {/* Platform Badge */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 flex w-12 h-12 bg-sky-500 items-center justify-center rounded-full  shadow-slate-700/40">
-                {platform.icon}
+                {platformConfig.icon}
             </div>
 
             {/* Text Box */}
@@ -26,8 +26,8 @@ const PlatformPreview = ({ text, platform, platformConfig }: { text: string, pla
             </div>
 
             <div className="flex content-start items-end gap-2 m-4 mb-1 justify-between">
-                <span className="text-sky-500">{platform.icon}</span>
-                <span className="font-semibold">{platform.name}</span>
+                <span className="text-sky-500">{platformConfig.icon}</span>
+                <span className="font-semibold">{platformConfig.name}</span>
                 <span className={`text-sm ${isOverLimit ? 'text-red-500' : 'text-gray-500'}`}>
                 {text.length}/{LIMIT}
                 </span>

@@ -20,7 +20,9 @@ export interface PlatformConfig {
   name: string;
   charLimit: number;
   allowsMedia: boolean;
-  allowsThreads: boolean
+  allowsThreads: boolean;
+  color: string;
+  icon: string;
 }
 
 export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
@@ -29,20 +31,17 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     name: 'BlueSky',
     charLimit: 300,
     allowsMedia: true,
-    allowsThreads: true
+    allowsThreads: true,
+    color: 'bg-sky-500',
+    icon: '🦋' 
   },
   linkedin:{
     id: 'linkedin',
     name: 'LinkedIn',
     charLimit: 3000,
     allowsMedia: true,
-    allowsThreads: false
+    allowsThreads: false,
+    color: 'bg-sky-500',
+    icon: '🦋' 
   }
 };
-
-  export interface Platform {
-    id: string;
-    name: string;
-    color: string;
-    icon: string;
-  }
