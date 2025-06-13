@@ -1,0 +1,210 @@
+import React, { useState, useEffect } from 'react';
+import { Plus, Settings, Send, Check } from 'lucide-react';
+import { BlueSkyService } from '../services/bluesky';
+import { StorageService } from '../services/storage';
+import { BlueSkyCredentials, PLATFORM_CONFIGS } from '../types';
+import LoginModal from './LoginModal';
+import PlatformPreview from './PostPreview';
+
+const SocialPostingInterface = () => {
+  const [postText, setPostText] = useState('');
+  const [selectedPlatforms, setSelectedPlatforms] = useState({
+    bluesky: true,
+  });
+  const [isPosting, setIsPosting] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [blueSkyService] = useState(new BlueSkyService());
+
+  const platforms = [
+    { id: 'bluesky', name: 'BlueSky', color: 'bg-sky-500', icon: '🦋' },
+  ];
+
+  useEffect(() => {
+    const initAuth = async () => {
+      const stored = StorageService.getBlueSkyCredentials();
+      if (stored) {
+        const success = await blueSkyService.login(stored);
+        setIsAuthenticated(success);
+      }
+    };
+    initAuth();
+  }, [blueSkyService]);
+
+  const handleLogin = async (credentials: BlueSkyCredentials) => {
+    const success = await blueSkyService.login(credentials);
+    if (success) {
+      StorageService.saveBlueSkyCredentials(credentials);
+      setIsAuthenticated(true);
+      setShowLogin(false);
+    }
+    return success;
+  };
+
+  const handlePost = async () => {
+    if (!postText.trim() || isPosting) return;
+    
+    if (!isAuthenticated) {
+      setShowLogin(true);
+      return;
+    }
+
+    setIsPosting(true);
+    try {
+      const result = await blueSkyService.createPost(postText);
+      if (result.success) {
+        setPostText('');
+        alert('Posted successfully!');
+      } else {
+        alert(`Post failed: ${result.error}`);
+      }
+    } catch (error) {
+      alert('Post failed: Unknown error');
+    }
+    setIsPosting(false);
+  };
+
+  const togglePlatform = (platformId: string) => {
+    setSelectedPlatforms(prev => ({
+      ...prev,
+      [platformId]: !prev[platformId as keyof typeof prev]
+    }));
+  };
+
+  return (
+    <div className="flex h-screen bg-slate-50">
+
+      {/* Left Sidebar */}
+      <div className="w-72 bg-white shadow-sm border-r border-slate-100 flex flex-col" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif' }}>
+        
+        {/* Add Account Button */}
+        <div className="p-6 pb-4">
+          <button className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all duration-200 font-medium shadow-sm">
+            <Plus size={18} />
+            Add Account
+          </button>
+        </div>
+
+        {/* Connected Platforms */}
+        <div className="flex-1 px-6 pb-4">
+          <h3 className="text-sm font-semibold text-slate-700 mb-4 tracking-wide uppercase">Connected Accounts</h3>
+
+          <div className="space-y-3">
+            {platforms.map(platform => (
+              <div 
+                key={platform.id}
+                className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all duration-200 cursor-pointer bg-white"
+              >
+                <div className={`w-10 h-10 ${platform.color} rounded-xl flex items-center justify-center text-white text-sm font-semibold shadow-sm`}>
+                  {platform.icon}
+                </div>
+                <span className="flex-1 font-medium text-slate-700" style={{ fontSize: '15px', fontWeight: '500' }}>{platform.name}</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePlatform(platform.id);
+                  }}
+                  className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
+                    selectedPlatforms[platform.id as keyof typeof selectedPlatforms]
+                      ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm' 
+                      : 'border-slate-300 hover:border-slate-400 bg-white'
+                  }`}
+                >
+                  {selectedPlatforms[platform.id as keyof typeof selectedPlatforms] && <Check size={14} />}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* User Account */}
+        <div className="p-6 pt-4 border-t border-slate-100 bg-slate-50">
+          <div className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all duration-200 cursor-pointer bg-white">
+            <div className="w-10 h-10 bg-slate-400 rounded-xl flex items-center justify-center text-white font-semibold shadow-sm">
+              IH
+            </div>
+            <div className="flex-1">
+              <div className="font-semibold text-slate-700" style={{ fontSize: '15px', fontWeight: '600' }}>Ian Hill</div>
+              <div className="text-sm text-slate-500" style={{ fontSize: '13px', fontWeight: '400' }}>ian@enthoos.ai</div>
+            </div>
+            <Settings size={18} className="text-slate-400" />
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col max-w-3xl mx-auto">
+        <div className="flex-1 p-8">
+          {/* Post Composer */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-lg shadow-slate-200/20">
+            <div className="p-8">
+              <textarea
+                value={postText}
+                onChange={(e) => setPostText(e.target.value)}
+                placeholder="What's happening?"
+                className="w-full h-40 resize-none border-0 outline-none text-lg placeholder-slate-400 leading-relaxed"
+                style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
+              />
+              
+              {/* Actions */}
+              <div className="flex justify-between items-center mt-6 pt-6 border-t border-slate-100">
+                <div className="flex items-center gap-6">
+                  <span className="text-sm font-medium text-slate-500">
+                    {postText.length}/300
+                  </span>
+                </div>
+                
+                <button 
+                  onClick={handlePost}
+                  className="px-8 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 font-medium shadow-lg shadow-slate-900/10"
+                  disabled={!postText.trim() || isPosting}
+                >
+                  <Send size={18} />
+                  {isPosting ? 'Posting...' : isAuthenticated ? 'Post to BlueSky' : 'Login & Post'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Platform Status */}
+          <div className="mt-6 flex flex-wrap gap-3">
+            {platforms.map(platform => (
+              selectedPlatforms[platform.id as keyof typeof selectedPlatforms] && (
+                <div key={platform.id} className="flex items-center gap-3 px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-medium shadow-sm">
+                  <div className={`w-5 h-5 ${platform.color} rounded-lg flex items-center justify-center text-white text-xs font-semibold`}>
+                    {platform.icon}
+                  </div>
+                  {platform.name}
+                  <Check size={14} />
+                </div>
+              )
+            ))}
+          </div>
+        </div>
+      </div>
+      
+      {/* Preview Panel */}
+      <div className="w-96 bg-white shadow-sm border-r border-slate-100 flex flex-col" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif'}}>
+        {platforms.map(platform => 
+      
+            <PlatformPreview
+            text={postText}
+            platform={platform}
+            platformConfig={PLATFORM_CONFIGS[platform.id]}
+            />
+
+          )}
+      </div>
+
+
+
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+        onLogin={handleLogin}
+      />
+    </div>
+  );
+};
+
+export default SocialPostingInterface;
