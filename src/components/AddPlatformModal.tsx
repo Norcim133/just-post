@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, ChevronRight } from 'lucide-react';
 import { PlatformConfig } from '../types'
+import { useAuth0 } from "@auth0/auth0-react";
 
 
 interface AddPlatformModalProps {
@@ -14,7 +15,7 @@ const AddPlatformModal: React.FC<AddPlatformModalProps> = ({ isOpen, onClose, pl
     if (!isOpen) return null;
 
     const addedPlatformIds = new Set(addedPlatforms.map(p => p.id));
-
+    const { loginWithRedirect } = useAuth0();
     return (
         // Overlay blocking app
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
@@ -37,7 +38,7 @@ const AddPlatformModal: React.FC<AddPlatformModalProps> = ({ isOpen, onClose, pl
                     {Object.values(platformConfigs).map(platformConfig => (
                         !addedPlatformIds.has(platformConfig.id) && (
                             <button
-                                onClick={onClose}
+                                onClick={() => loginWithRedirect()}
                                 className={`w-full flex items-center gap-3 px-6 py-4 ${platformConfig.color} text-white rounded-xl hover:opacity-90 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-medium text-base`}
                                 >
                                 <span className="text-2xl">{platformConfig.icon}</span>
