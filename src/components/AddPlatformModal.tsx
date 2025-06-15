@@ -17,14 +17,23 @@ const AddPlatformModal: React.FC<AddPlatformModalProps> = ({ isOpen, onClose, pl
 
     return (
         // Overlay blocking app
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
 
         {/* Platforms Container */}
-            <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
-                
-                <h2 className="text-2xl font-bold text-slate-800 mb-4">Add Platforms</h2>
-                <div className="flex flex-col mb-6 gap-4 ">
-
+            <div className="bg-white rounded-3xl p-8 w-full max-w-md mx-4 shadow-2xl shadow-black/20 ring-1 ring-black/5 backdrop-blur-xl">
+                <div className="flex justify-end">
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-slate-100 rounded-xl transition-colors -mr-2 -mt-2"
+                        >
+                        <X size={20} className="text-slate-500" />
+                    </button>
+                </div>
+                <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold text-slate-900 mb-2">Connect Your Accounts</h2>
+                    <p className="text-slate-600 text-sm">Choose platforms to share your content</p>
+                </div>
+                <div className="flex flex-col gap-3">
                     {Object.values(platformConfigs).map(platformConfig => (
                         !addedPlatformIds.has(platformConfig.id) && (
                             <button
@@ -36,12 +45,7 @@ const AddPlatformModal: React.FC<AddPlatformModalProps> = ({ isOpen, onClose, pl
                                 <ChevronRight size={20} />
                             </button>
                         )))}
-                        <button
-                            onClick={onClose}
-                            className= "p-2 hover:bg-slate-100 rounded-xl transition-colors"
-                            >
-                            Close modal
-                        </button>
+
                 </div>
                 </div>
         </div>

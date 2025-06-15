@@ -43,5 +43,23 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     allowsThreads: false,
     color: 'bg-blue-700',
     icon: 'in' 
+  },
+  twitter:{
+    id: 'twitter',
+    name: 'Twitter/X',
+    charLimit: 280,
+    allowsMedia: true,
+    allowsThreads: true,
+    color: 'bg-slate-900',
+    icon: '𝕏' 
+  },
+  threads:{
+    id: 'threads',
+    name: 'Threads',
+    charLimit: 500,
+    allowsMedia: true,
+    allowsThreads: true,
+    color: 'bg-gray-900',
+    icon: '@' 
   }
 };
