@@ -100,7 +100,7 @@ const SocialPostingInterface = () => {
           <h3 className="text-sm font-semibold text-slate-700 mb-4 tracking-wide uppercase">Connected Accounts</h3>
 
           <div className="space-y-3">
-            
+
             {addedPlatforms.map(platformConfig => (
               <div 
                 key={platformConfig.id}
@@ -216,6 +216,7 @@ const SocialPostingInterface = () => {
         isOpen={showAddPlatform}
         onClose={() => setShowAddPlatform(false)}
         platformConfigs={PLATFORM_CONFIGS}
+        addedPlatforms={addedPlatforms}
       />
 
       <LoginModal

@@ -41,7 +41,7 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     charLimit: 3000,
     allowsMedia: true,
     allowsThreads: false,
-    color: 'bg-sky-500',
-    icon: '🦋' 
+    color: 'bg-blue-700',
+    icon: 'in' 
   }
 };
