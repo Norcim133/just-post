@@ -4,6 +4,7 @@ import { BlueSkyService } from '../services/bluesky';
 import { StorageService } from '../services/storage';
 import { BlueSkyCredentials, PLATFORM_CONFIGS, PlatformConfig } from '../types';
 import LoginModal from './LoginModal';
+import AddPlatformModal from './AddPlatformModal'
 import PlatformPreview from './PostPreview';
 
 const SocialPostingInterface = () => {
@@ -18,6 +19,7 @@ const SocialPostingInterface = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [blueSkyService] = useState(new BlueSkyService());
+  const [showAddPlatform, setShowAddPlatform] = useState(false);
 
 
   useEffect(() => {
@@ -71,6 +73,11 @@ const SocialPostingInterface = () => {
     }));
   };
 
+
+  const toggleAddPlatform = () => {
+    setShowAddPlatform(true)
+  }
+
   return (
     <div className="flex h-screen bg-slate-50">
 
@@ -79,7 +86,10 @@ const SocialPostingInterface = () => {
         
         {/* Add Account Button */}
         <div className="p-6 pb-4">
-          <button className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all duration-200 font-medium shadow-sm">
+          <button
+            onClick={toggleAddPlatform}
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all duration-200 font-medium shadow-sm"
+            >
             <Plus size={18} />
             Add Account
           </button>
@@ -90,9 +100,10 @@ const SocialPostingInterface = () => {
           <h3 className="text-sm font-semibold text-slate-700 mb-4 tracking-wide uppercase">Connected Accounts</h3>
 
           <div className="space-y-3">
+            
             {addedPlatforms.map(platformConfig => (
               <div 
-                key={platformConfig}
+                key={platformConfig.id}
                 className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all duration-200 cursor-pointer bg-white"
               >
                 <div className={`w-10 h-10 ${platformConfig.color} rounded-xl flex items-center justify-center text-white text-sm font-semibold shadow-sm`}>
@@ -200,6 +211,12 @@ const SocialPostingInterface = () => {
 
     </div>
       </div>
+    
+      <AddPlatformModal
+        isOpen={showAddPlatform}
+        onClose={() => setShowAddPlatform(false)}
+        platformConfigs={PLATFORM_CONFIGS}
+      />
 
       <LoginModal
         isOpen={showLogin}
