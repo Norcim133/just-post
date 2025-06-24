@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Settings, Send, Check } from 'lucide-react';
 import { BlueSkyService } from '../services/bluesky';
 import { StorageService } from '../services/storage';
+import { useTwitterService } from '../services/twitter-v2';
 import { BlueSkyCredentials, PLATFORM_CONFIGS, PlatformConfig } from '../types';
 import LoginModal from './LoginModal';
 import AddPlatformModal from './AddPlatformModal'
@@ -9,6 +10,7 @@ import PlatformPreview from './PostPreview';
 import { useAuth0 } from "@auth0/auth0-react";
 
 const SocialPostingInterface = () => {
+  const { isAuthenticated: isAuth0Authenticated, user, logout, loginWithRedirect, isLoading: isAuth0Loading } = useAuth0();
   const [postText, setPostText] = useState('');
   const [addedPlatforms, setAddedPlatforms] = useState<PlatformConfig[]>([
     PLATFORM_CONFIGS.bluesky  // Direct reference to the config object
@@ -20,7 +22,9 @@ const SocialPostingInterface = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [blueSkyService] = useState(new BlueSkyService());
+  const twitterService = useTwitterService();
   const [showAddPlatform, setShowAddPlatform] = useState(false);
+  const [twitterIsAuthenticated, setTwitterIsAuthenticated] = useState(false);
 
 
   useEffect(() => {
@@ -33,6 +37,94 @@ const SocialPostingInterface = () => {
     };
     initAuth();
   }, [blueSkyService]);
+
+  useEffect(() => {
+    // Check if already authenticated with server-side tokens
+    const checkTwitterAuth = async () => {
+      if (isAuth0Authenticated && user?.sub) {
+        const isConnected = await twitterService.checkConnection();
+        setTwitterIsAuthenticated(isConnected);
+        
+        // If connected, ensure Twitter is in added platforms
+        if (isConnected && !addedPlatforms.find(p => p.id === 'twitter')) {
+          setAddedPlatforms(prev => [...prev, PLATFORM_CONFIGS.twitter]);
+          setSelectedPlatforms(prev => ({ ...prev, twitter: true }));
+        }
+      }
+    };
+    checkTwitterAuth();
+  }, [twitterService, isAuth0Authenticated, user]);
+
+  useEffect(() => {
+    // Check URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    const platform = urlParams.get('platform');
+    
+    // Handle Auth0 redirect with platform intent
+    if (platform === 'twitter' && isAuth0Authenticated && !code) {
+      // User just logged in via Auth0 and wants to connect Twitter
+      setShowAddPlatform(true);
+      // Clear the platform parameter
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    // Handle Twitter OAuth callback
+    if (code && state && isAuth0Authenticated && user?.sub) {
+      // Prevent double processing
+      const processed = sessionStorage.getItem('twitter-callback-processed');
+      if (processed === code) {
+        console.log('Twitter callback already processed');
+        return;
+      }
+      
+      // Mark as processed
+      sessionStorage.setItem('twitter-callback-processed', code);
+      
+      // Handle the callback
+      const handleTwitterCallback = async () => {
+        console.log('Processing Twitter callback...');
+        console.log('Auth0 authenticated:', isAuth0Authenticated);
+        console.log('User:', user);
+        
+        try {
+          const success = await twitterService.handleCallback(code, state);
+          
+          if (success) {
+            console.log('Twitter authentication successful!');
+            setTwitterIsAuthenticated(true);
+            
+            // Add Twitter to added platforms if not already there
+            if (!addedPlatforms.find(p => p.id === 'twitter')) {
+              setAddedPlatforms([...addedPlatforms, PLATFORM_CONFIGS.twitter]);
+            }
+            
+            // Also add Twitter to selected platforms
+            setSelectedPlatforms(prev => ({
+              ...prev,
+              twitter: true
+            }));
+            
+            // Clear the processed flag after success
+            sessionStorage.removeItem('twitter-callback-processed');
+          } else {
+            console.error('Twitter authentication failed');
+            alert('Failed to authenticate with Twitter. Please try again.');
+          }
+        } catch (error) {
+          console.error('Twitter callback error:', error);
+          alert('Failed to authenticate with Twitter. Please try again.');
+        } finally {
+          // Clear the URL params
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      };
+      
+      handleTwitterCallback();
+    }
+  }, [twitterService, addedPlatforms, isAuth0Authenticated, user]);
+
 
   const handleLogin = async (credentials: BlueSkyCredentials) => {
     const success = await blueSkyService.login(credentials);
@@ -47,19 +139,46 @@ const SocialPostingInterface = () => {
   const handlePost = async () => {
     if (!postText.trim() || isPosting) return;
     
-    if (!isAuthenticated) {
-      setShowLogin(true);
+    // Check if any platforms are selected
+    const selectedPlatformIds = Object.entries(selectedPlatforms)
+      .filter(([_, isSelected]) => isSelected)
+      .map(([platformId, _]) => platformId);
+    
+    if (selectedPlatformIds.length === 0) {
+      alert('Please select at least one platform to post to');
       return;
     }
 
     setIsPosting(true);
+    const results = [];
+    
     try {
-      const result = await blueSkyService.createPost(postText);
-      if (result.success) {
+      // Post to each selected platform
+      for (const platformId of selectedPlatformIds) {
+        if (platformId === 'bluesky' && isAuthenticated) {
+          const result = await blueSkyService.createPost(postText);
+          results.push({ platform: 'BlueSky', ...result });
+        } else if (platformId === 'twitter' && twitterIsAuthenticated) {
+          const result = await twitterService.createTwitterPost(postText);
+          results.push({ platform: 'Twitter/X', ...result });
+        }
+      }
+      
+      // Check results
+      const successful = results.filter(r => r.success);
+      const failed = results.filter(r => !r.success);
+      
+      if (successful.length > 0) {
         setPostText('');
-        alert('Posted successfully!');
+      }
+      
+      // Show results
+      if (failed.length === 0) {
+        alert(`Posted successfully to ${successful.map(r => r.platform).join(', ')}!`);
+      } else if (successful.length > 0) {
+        alert(`Posted to ${successful.map(r => r.platform).join(', ')}. Failed: ${failed.map(r => r.platform).join(', ')}`);
       } else {
-        alert(`Post failed: ${result.error}`);
+        alert('All posts failed');
       }
     } catch (error) {
       alert('Post failed: Unknown error');
@@ -78,8 +197,16 @@ const SocialPostingInterface = () => {
   const toggleAddPlatform = () => {
     setShowAddPlatform(true)
   }
-  const { logout, user, isAuthenticated: isAuth0Authenticated } = useAuth0();
   const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // Show loading state while Auth0 initializes
+  if (isAuth0Loading) {
+    return (
+      <div className="flex h-screen bg-slate-50 items-center justify-center">
+        <div className="text-slate-600">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-slate-50">
@@ -175,15 +302,27 @@ const SocialPostingInterface = () => {
                 )}
               </div>
               <hr className="border-slate-200" />
-              <button
-                onClick={() => {
-                  logout({ logoutParams: { returnTo: window.location.origin } });
-                  setShowUserMenu(false);
-                }}
-                className="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
-              >
-                Logout
-              </button>
+              {isAuth0Authenticated ? (
+                <button
+                  onClick={() => {
+                    logout({ logoutParams: { returnTo: window.location.origin } });
+                    setShowUserMenu(false);
+                  }}
+                  className="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
+                >
+                  Logout
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    loginWithRedirect();
+                    setShowUserMenu(false);
+                  }}
+                  className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                >
+                  Login with Auth0
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -248,13 +387,15 @@ const SocialPostingInterface = () => {
         <h3 className="pt-10 text-sm font-semibold text-slate-700 mb-4 tracking-wide uppercase">Post Previews</h3>
           <hr className="pt-5 border-gray-300" />
 
-        {addedPlatforms.map(platformConfig => (
-          selectedPlatforms[platformConfig.id as keyof typeof selectedPlatforms] && (
-          <PlatformPreview
-          text={postText}
-          platformConfig={platformConfig}
-          />
-        )))}
+        {addedPlatforms
+          .filter(platformConfig => selectedPlatforms[platformConfig.id as keyof typeof selectedPlatforms])
+          .map(platformConfig => (
+            <PlatformPreview
+              key={platformConfig.id}
+              text={postText}
+              platformConfig={platformConfig}
+            />
+          ))}
 
     </div>
       </div>

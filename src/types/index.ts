@@ -3,6 +3,17 @@ export interface BlueSkyCredentials {
   password: string; // app-specific password
 }
 
+export interface TwitterSessionCredentials {
+  verifierCode: string | null;
+  challengeCode: string | null;
+  stateToken: string | null;
+}
+
+export interface TwitterLocalCredentials {
+  accessToken: string | null;
+  refreshToken: string | null;
+}
+
 export interface SocialPost {
   text: string;
   platforms: string[];
