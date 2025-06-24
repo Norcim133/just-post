@@ -14,7 +14,7 @@ export default async function handler(req: any, res: any) {
 
     // Get client credentials from environment variables
     const clientId = process.env.VITE_TWITTER_CLIENT_ID;
-    const clientSecret = process.env.VITE_TWITTER_CLIENT_SECRET;
+    const clientSecret = process.env.TWITTER_CLIENT_SECRET;
     
     if (!clientId || !clientSecret) {
       throw new Error('Twitter client credentials not configured');

@@ -1,4 +1,3 @@
-import { jwtVerify, createRemoteJWKSet } from 'jose';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export interface AuthenticatedRequest extends VercelRequest {
@@ -13,14 +12,31 @@ const AUTH0_DOMAIN = process.env.VITE_AUTH0_DOMAIN;
 const AUTH0_AUDIENCE = process.env.VITE_AUTH0_AUDIENCE || `https://${AUTH0_DOMAIN}/api/v2/`;
 
 if (!AUTH0_DOMAIN) {
-  throw new Error('AUTH0_DOMAIN environment variable is not set');
+  console.warn('AUTH0_DOMAIN environment variable is not set');
 }
 
-// Create JWKS client
-const JWKS = createRemoteJWKSet(new URL(`https://${AUTH0_DOMAIN}/.well-known/jwks.json`));
+// Lazy load jose to avoid ES module issues
+let joseModule: any = null;
 
-export async function verifyAuth0Token(token: string) {
+async function getJose() {
+  if (!joseModule) {
+    joseModule = await import('jose');
+  }
+  return joseModule;
+}
+
+export async function verifyAuth0Token(authHeader: string) {
   try {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new Error('Missing or invalid authorization header');
+    }
+    
+    const token = authHeader.substring(7);
+    const { jwtVerify, createRemoteJWKSet } = await getJose();
+    
+    // Create JWKS client
+    const JWKS = createRemoteJWKSet(new URL(`https://${AUTH0_DOMAIN}/.well-known/jwks.json`));
+    
     const { payload } = await jwtVerify(token, JWKS, {
       issuer: `https://${AUTH0_DOMAIN}/`,
       audience: AUTH0_AUDIENCE,
@@ -29,7 +45,7 @@ export async function verifyAuth0Token(token: string) {
     return payload;
   } catch (error) {
     console.error('Token verification error:', error);
-    throw new Error('Invalid token');
+    return null;
   }
 }
 
@@ -40,15 +56,15 @@ export async function withAuth(
     try {
       // Get the authorization header
       const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Missing or invalid authorization header' });
+      if (!authHeader) {
+        return res.status(401).json({ error: 'Missing authorization header' });
       }
       
-      // Extract the token
-      const token = authHeader.substring(7);
-      
       // Verify the token
-      const payload = await verifyAuth0Token(token);
+      const payload = await verifyAuth0Token(authHeader);
+      if (!payload) {
+        return res.status(401).json({ error: 'Invalid token' });
+      }
       
       // Add user info to request
       req.user = {
