@@ -1,4 +1,3 @@
-import React from 'react'
 import SocialPostingInterface from './components/SocialPostingInterface'
 import { useApiService } from './services/api'
 

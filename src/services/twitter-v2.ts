@@ -3,13 +3,6 @@ import { TwitterStorageService } from '../services/storage';
 import { apiService } from './api';
 import { useAuth0 } from '@auth0/auth0-react';
 
-interface TokenResponse {
-    access_token: string;
-    token_type: string;
-    expires_in: number;
-    refresh_token: string;
-    scope: string;
-}
 
 interface PostResponse {
     platform: string;
@@ -163,7 +156,7 @@ export class TwitterServiceV2 {
                 throw new Error(`Token exchange failed: ${response.status} - ${errorText}`);
             }
 
-            const data: TokenResponse = await response.json();
+            await response.json();
             
             // Clear session storage
             TwitterStorageService.clearTwitterSessionCredentials();

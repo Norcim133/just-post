@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Settings, Send, Check } from 'lucide-react';
 import { BlueSkyService } from '../services/bluesky';
 import { StorageService } from '../services/storage';
@@ -157,10 +157,10 @@ const SocialPostingInterface = () => {
       for (const platformId of selectedPlatformIds) {
         if (platformId === 'bluesky' && isAuthenticated) {
           const result = await blueSkyService.createPost(postText);
-          results.push({ platform: 'BlueSky', ...result });
+          results.push(result);
         } else if (platformId === 'twitter' && twitterIsAuthenticated) {
           const result = await twitterService.createTwitterPost(postText);
-          results.push({ platform: 'Twitter/X', ...result });
+          results.push(result);
         }
       }
       
