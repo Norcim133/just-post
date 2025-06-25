@@ -38,6 +38,7 @@ const AddPlatformModal: React.FC<AddPlatformModalProps> = ({ isOpen, onClose, pl
                     {Object.values(platformConfigs).map(platformConfig => (
                         !addedPlatformIds.has(platformConfig.id) && (
                             <button
+                                key={platformConfig.id}
                                 onClick={() => loginWithRedirect()}
                                 className={`w-full flex items-center gap-3 px-6 py-4 ${platformConfig.color} text-white rounded-xl hover:opacity-90 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-medium text-base`}
                                 >

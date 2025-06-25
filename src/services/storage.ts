@@ -1,7 +1,9 @@
-import { BlueSkyCredentials } from '../types';
+import { BlueSkyCredentials, TwitterLocalCredentials, TwitterSessionCredentials } from '../types';
 
 const STORAGE_KEYS = {
   BLUESKY_CREDENTIALS: 'just-post-bluesky-credentials',
+  TWITTER_LOCAL_CREDENTIALS: 'just-post-twitter-local-credentials',
+  TWITTER_SESSION_CREDENTIALS: 'just-post-twitter-session-credentials',
 } as const;
 
 export class StorageService {
@@ -38,4 +40,62 @@ export class StorageService {
   static hasStoredCredentials(): boolean {
     return !!this.getBlueSkyCredentials();
   }
+}
+
+export class TwitterStorageService {
+
+  static saveTwitterLocalCredentials(credentials: TwitterLocalCredentials): void {
+    try {
+      localStorage.setItem(
+        STORAGE_KEYS.TWITTER_LOCAL_CREDENTIALS,
+        JSON.stringify(credentials));
+
+    } catch (error) {
+      console.error('Failed to load TwitterLocalCredentials: ', error);
+    }
+
+  }
+
+    static saveTwitterSessionCredentials(credentials: TwitterSessionCredentials): void {
+    try {
+      sessionStorage.setItem(
+        STORAGE_KEYS.TWITTER_SESSION_CREDENTIALS,
+        JSON.stringify(credentials));
+
+    } catch (error) {
+      console.error('Failed to load TwitterLocalCredentials: ', error);
+    }
+
+  }
+
+
+  static getTwitterLocalCredentials(): TwitterLocalCredentials | null {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.TWITTER_LOCAL_CREDENTIALS);
+      return stored ? JSON.parse(stored) : null;
+    } catch (error) {
+      console.error('Failed to load TwitterLocalCredentials: ', error);
+      return null;
+    }
+  }
+
+    static getTwitterSessionCredentials(): TwitterSessionCredentials | null {
+    try {
+      const stored = sessionStorage.getItem(STORAGE_KEYS.TWITTER_SESSION_CREDENTIALS);
+      return stored ? JSON.parse(stored) : null;
+
+    } catch (error) {
+      console.error('Failed to load TwitterLocalCredentials: ', error);
+      return null;
+    }
+  }
+
+  static clearTwitterSessionCredentials(): void {
+    try {
+      sessionStorage.removeItem(STORAGE_KEYS.TWITTER_SESSION_CREDENTIALS);
+    } catch (error) {
+      console.error('Failed to clear Twitter session credentials:', error);
+    }
+  }
+
 }
