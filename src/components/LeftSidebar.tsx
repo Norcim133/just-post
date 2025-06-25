@@ -10,14 +10,12 @@ interface LeftSidebarProps {
     selectedPlatforms: Record<string, boolean>;
     onTogglePlatform: (id: string) => void;
     onAddAccountClick: () => void;
-    user: User | undefined;
-    isAuthenticated: boolean;
-    onLogout: () => void;
 
 }
 
 
-const LeftSidebar = ( { addedPlatforms, selectedPlatforms, onTogglePlatform, onAddAccountClick, user, isAuthenticated, onLogout } : LeftSidebarProps) => {
+const LeftSidebar = ( { addedPlatforms, selectedPlatforms, onTogglePlatform, onAddAccountClick, } : LeftSidebarProps) => {
+
 
     return (
       <div className="w-72 bg-white shadow-sm border-r border-slate-100 flex flex-col" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif' }}>
@@ -64,11 +62,7 @@ const LeftSidebar = ( { addedPlatforms, selectedPlatforms, onTogglePlatform, onA
           </div>
         </div>
 
-        <UserAccountButton
-            user={user}
-            isAuthenticated={isAuthenticated}
-            logout={onLogout}
-        />
+        <UserAccountButton/>
 
       </div>
       )

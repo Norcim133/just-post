@@ -1,24 +1,22 @@
 import React, { useState } from 'react';
 import { Plus, Settings, Check } from 'lucide-react';
-import { User } from '@auth0/auth0-react'; 
+import { User, useAuth0 } from '@auth0/auth0-react'; 
 
-interface UserAccountButtonProps {
-    user: User | undefined;
-    isAuthenticated: boolean;
-    onLogout: () => void;
-}
 
-const UserAccountButton = ({ user, isAuthenticated, onLogout } : UserAccountButtonProps) => {
+const UserAccountButton = () => {
 
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const { logout, user, loginWithRedirect, isLoading, isAuthenticated } = useAuth0();
+
 
     return (
         //User Account
         <div className="p-6 pt-4 border-t border-slate-100 bg-slate-50 relative">
-          <button
+        {isAuthenticated ? (
+            <button
             onClick={() => setShowUserMenu(!showUserMenu)}
             className="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all duration-200 bg-white"
-          >
+            >
             <div className="w-10 h-10 bg-slate-400 rounded-xl flex items-center justify-center text-white font-semibold shadow-sm">
               {user?.name?.charAt(0) || 'U'}
             </div>
@@ -32,6 +30,21 @@ const UserAccountButton = ({ user, isAuthenticated, onLogout } : UserAccountButt
             </div>
             <Settings size={18} className="text-slate-400" />
           </button>
+        ) : (
+            <button
+            onClick={() => loginWithRedirect()
+
+            }
+            className="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all duration-200 bg-white"
+            >
+            <div className="flex-1 text-left">
+              <div className="font-semibold text-slate-700" style={{ fontSize: '15px', fontWeight: '600' }}>
+                Login
+              </div>
+            </div>
+            
+          </button>
+        )}
 
           {/* User Menu Popup */}
           {showUserMenu && (
@@ -47,7 +60,7 @@ const UserAccountButton = ({ user, isAuthenticated, onLogout } : UserAccountButt
                   <>
                     <div className="flex justify-between">
                       <span className="text-slate-600">User ID:</span>
-                      <span className="font-mono text-xs text-slate-700">{user.sub}</span>
+                      <span className="font-mono text-xs text-slate-700 align-middle">{user.sub?.split('|')[1].slice(0,10)}...</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-600">Provider:</span>
@@ -59,7 +72,7 @@ const UserAccountButton = ({ user, isAuthenticated, onLogout } : UserAccountButt
               <hr className="border-slate-200" />
               <button
                 onClick={() => {
-                  onLogout({ logoutParams: { returnTo: window.location.origin } });
+                  logout({ logoutParams: { returnTo: window.location.origin } });
                   setShowUserMenu(false);
                 }}
                 className="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
@@ -70,7 +83,6 @@ const UserAccountButton = ({ user, isAuthenticated, onLogout } : UserAccountButt
           )}
         </div>
         )
-
 }
 
 export default UserAccountButton;

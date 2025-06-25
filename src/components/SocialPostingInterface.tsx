@@ -23,6 +23,9 @@ const SocialPostingInterface = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [blueSkyService] = useState(new BlueSkyService());
   const [showAddPlatform, setShowAddPlatform] = useState(false);
+  const [platformsAuthenticated, setPlatformsAuthenticated] = useState({
+    bluesky: true
+  })
 
 
   useEffect(() => {
@@ -30,17 +33,19 @@ const SocialPostingInterface = () => {
       const stored = StorageService.getBlueSkyCredentials();
       if (stored) {
         const success = await blueSkyService.login(stored);
-        setIsAuthenticated(success);
-      }
+        setPlatformsAuthenticated(prev => ({
+      ...prev,
+      bluesky: success
+      }));
+    }
     };
     initAuth();
   }, [blueSkyService]);
 
-  const handleLogin = async (credentials: BlueSkyCredentials) => {
+  const handleBlueSkyLogin = async (credentials: BlueSkyCredentials) => {
     const success = await blueSkyService.login(credentials);
     if (success) {
       StorageService.saveBlueSkyCredentials(credentials);
-      setIsAuthenticated(true);
       setShowLogin(false);
     }
     return success;
@@ -80,7 +85,8 @@ const SocialPostingInterface = () => {
   const toggleAddPlatform = () => {
     setShowAddPlatform(true)
   }
-  const { logout, user, isAuthenticated: isAuth0Authenticated } = useAuth0();
+  
+
 
   return (
     <div className="flex h-screen bg-slate-50">
@@ -90,9 +96,6 @@ const SocialPostingInterface = () => {
           selectedPlatforms={selectedPlatforms}
           onTogglePlatform={togglePlatform}
           onAddAccountClick={toggleAddPlatform}
-          user={user}
-          isAuthenticated={isAuthenticated}
-          onLogout={() => logout({ logoutParams: { returnTo: window.location.origin } })}
         />
 
       {/* Main Content Area */}
@@ -164,7 +167,7 @@ const SocialPostingInterface = () => {
 
     </div>
       </div>
-    
+      
       <AddPlatformModal
         isOpen={showAddPlatform}
         onClose={() => setShowAddPlatform(false)}
@@ -172,10 +175,11 @@ const SocialPostingInterface = () => {
         addedPlatforms={addedPlatforms}
       />
 
+      {/* BlueSky Login??? */}
       <LoginModal
         isOpen={showLogin}
         onClose={() => setShowLogin(false)}
-        onLogin={handleLogin}
+        onLogin={handleBlueSkyLogin}
       />
     </div>
   );
