@@ -28,7 +28,6 @@ export interface PostResult {
 }
 
 export interface PlatformConfig {
-  id: string;
   name: string;
   charLimit: number;
   allowsMedia: boolean;
@@ -37,9 +36,20 @@ export interface PlatformConfig {
   icon: string;
 }
 
+export interface PlatformState {
+  id: string;
+  isAdded: boolean;
+  isConnected: boolean;
+  isSelected: boolean;
+  config: PlatformConfig;
+}
+
+export interface Platforms {
+  [key: string]: PlatformState
+}
+
 export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
   bluesky:{
-    id: 'bluesky',
     name: 'BlueSky',
     charLimit: 300,
     allowsMedia: true,
@@ -48,7 +58,6 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     icon: '🦋' 
   },
   linkedin:{
-    id: 'linkedin',
     name: 'LinkedIn',
     charLimit: 3000,
     allowsMedia: true,
@@ -57,7 +66,6 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     icon: 'in' 
   },
   twitter:{
-    id: 'twitter',
     name: 'Twitter/X',
     charLimit: 280,
     allowsMedia: true,
@@ -66,7 +74,6 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     icon: '𝕏' 
   },
   threads:{
-    id: 'threads',
     name: 'Threads',
     charLimit: 500,
     allowsMedia: true,

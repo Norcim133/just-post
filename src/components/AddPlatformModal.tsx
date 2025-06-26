@@ -1,18 +1,17 @@
 import React from 'react';
 import { X, ChevronRight } from 'lucide-react';
-import { PlatformConfig } from '../types'
+import { Platforms } from '../types'
 import { useAuth0 } from "@auth0/auth0-react";
 
 
 interface AddPlatformModalProps {
-    isOpen: Boolean;
+    activeModal: string;
     onClose: () => void;
-    platformConfigs: Record<string, PlatformConfig>
-    addedPlatforms: PlatformConfig[]
+    platforms: Platforms;
 }
 
-const AddPlatformModal: React.FC<AddPlatformModalProps> = ({ isOpen, onClose, platformConfigs, addedPlatforms }) => {
-    if (!isOpen) return null;
+const AddPlatformModal: React.FC<AddPlatformModalProps> = ({ activeModal, onClose, platforms }) => {
+    if (activeModal !== 'addPlatform') return null;
 
     const addedPlatformIds = new Set(addedPlatforms.map(p => p.id));
     const { loginWithRedirect } = useAuth0();
