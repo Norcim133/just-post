@@ -1,20 +1,15 @@
-import React from 'react';
 import { X, ChevronRight } from 'lucide-react';
-import { Platforms } from '../types'
-import { useAuth0 } from "@auth0/auth0-react";
+import { PlatformState } from '../types'
 
 
 interface AddPlatformModalProps {
-    activeModal: string;
+    availablePlatforms: PlatformState[];
+    onAdd: (newPlatformId: string) => void; 
     onClose: () => void;
-    platforms: Platforms;
 }
 
-const AddPlatformModal: React.FC<AddPlatformModalProps> = ({ activeModal, onClose, platforms }) => {
-    if (activeModal !== 'addPlatform') return null;
+const AddPlatformModal = ({ availablePlatforms, onAdd, onClose }: AddPlatformModalProps )=> {
 
-    const addedPlatformIds = new Set(addedPlatforms.map(p => p.id));
-    const { loginWithRedirect } = useAuth0();
     return (
         // Overlay blocking app
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
@@ -34,18 +29,17 @@ const AddPlatformModal: React.FC<AddPlatformModalProps> = ({ activeModal, onClos
                     <p className="text-slate-600 text-sm">Choose platforms to share your content</p>
                 </div>
                 <div className="flex flex-col gap-3">
-                    {Object.values(platformConfigs).map(platformConfig => (
-                        !addedPlatformIds.has(platformConfig.id) && (
+                    { availablePlatforms.map(platformState => (
                             <button
-                                key={platformConfig.id}
-                                onClick={() => loginWithRedirect()}
-                                className={`w-full flex items-center gap-3 px-6 py-4 ${platformConfig.color} text-white rounded-xl hover:opacity-90 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-medium text-base`}
+                                key={platformState.id}
+                                onClick={() => onAdd(platformState.id)}
+                                className={`w-full flex items-center gap-3 px-6 py-4 ${platformState.config.color} text-white rounded-xl hover:opacity-90 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-medium text-base`}
                                 >
-                                <span className="text-2xl">{platformConfig.icon}</span>
-                                <span className="flex-1 text-left">Continue with {platformConfig.name}</span>
+                                <span className="text-2xl">{platformState.config.icon}</span>
+                                <span className="flex-1 text-left">Continue with {platformState.config.name}</span>
                                 <ChevronRight size={20} />
                             </button>
-                        )))}
+                        ))}
 
                 </div>
                 </div>

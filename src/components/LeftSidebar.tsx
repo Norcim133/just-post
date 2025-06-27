@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { PlatformState, PlatformConfig } from '../types'
+import { PlatformState } from '../types'
 import { Plus, Check } from 'lucide-react';
 import UserAccountButton from './UserAccountButton';
 

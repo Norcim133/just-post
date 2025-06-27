@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { Plus, Settings, Check } from 'lucide-react';
-import { User, useAuth0 } from '@auth0/auth0-react'; 
+import { useState } from 'react';
+import { Settings } from 'lucide-react';
+import { useAuth0 } from '@auth0/auth0-react'; 
 
 
 const UserAccountButton = () => {
 
     const [showUserMenu, setShowUserMenu] = useState(false);
-    const { logout, user, loginWithRedirect, isLoading, isAuthenticated } = useAuth0();
+    const { logout, user, loginWithRedirect, isAuthenticated } = useAuth0();
 
 
     return (
