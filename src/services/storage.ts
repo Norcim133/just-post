@@ -1,10 +1,33 @@
-import { BlueSkyCredentials, TwitterLocalCredentials, TwitterSessionCredentials } from '../types';
+import { BlueSkyCredentials, TwitterLocalCredentials, TwitterSessionCredentials, Platforms } from '../types';
 
 const STORAGE_KEYS = {
   BLUESKY_CREDENTIALS: 'just-post-bluesky-credentials',
   TWITTER_LOCAL_CREDENTIALS: 'just-post-twitter-local-credentials',
   TWITTER_SESSION_CREDENTIALS: 'just-post-twitter-session-credentials',
+  PLATFORM_SELECTIONS_KEY: 'just-post-platform-selections'
 } as const;
+
+export const getPlatformSelections = () => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.PLATFORM_SELECTIONS_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.error('Failed to getPlatformSelections');
+    return null;
+  }
+
+}
+
+export const savePlatformSelections = (platformSelections: Record<string, boolean>) => {
+  try {
+    localStorage.setItem(
+      STORAGE_KEYS.PLATFORM_SELECTIONS_KEY,
+      JSON.stringify(platformSelections)
+    ) 
+  } catch (error) {
+    console.error('Failed to getPlatformSelections')
+  }
+}
 
 export class StorageService {
   
