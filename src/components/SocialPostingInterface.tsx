@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import LeftSidebar from './LeftSidebar';
 import { BlueSkyService } from '../services/bluesky';
-import { savePlatformSelections, getPlatformSelections, StorageService } from '../services/storage';
+import { savePlatformAdditions, getPlatformsAdded, savePlatformSelections, getPlatformSelections, TwitterStorageService, StorageService } from '../services/storage';
 import { BlueSkyCredentials, Platforms, PLATFORM_CONFIGS } from '../types';
 import LoginModal from './LoginModal';
 import AddPlatformModal from './AddPlatformModal'
@@ -53,36 +53,45 @@ const SocialPostingInterface = () => {
       }
     };
 
+    const savedAdditions = getPlatformsAdded();
     const savedSelections = getPlatformSelections();
 
-    if (savedSelections) {
 
-      Object.keys(initialConfigs).forEach(platformId => {
-        if (savedSelections[platformId] !== undefined) {
-          initialConfigs[platformId].isSelected = savedSelections[platformId]
+    Object.keys(initialConfigs).forEach(platformId => {
+        if (savedAdditions && savedAdditions[platformId] !== undefined) {
+          initialConfigs[platformId].isAdded = savedAdditions[platformId];
         }
+
+        if (savedSelections && initialConfigs[platformId].isAdded && savedSelections[platformId] !== undefined) {
+          initialConfigs[platformId].isSelected = savedSelections[platformId];
+        }
+
       });
-    }
+    
     return initialConfigs;
   });
 
-  // Maintain user's selected platform across sessions
+  // PLATFORM ADDITIONS - Maintain user's selected platform across sessions
   useEffect(() => {
+    const addedPlatforms: Record<string, boolean> = {};
+    Object.keys(platforms).forEach(
+      platformId => {
+        addedPlatforms[platformId] = platforms[platformId].isAdded 
+      }
+    )
+    savePlatformAdditions(addedPlatforms)
+    
     const platformSelections: Record<string, boolean> = {};
     Object.keys(platforms).forEach(
       platformId => {
         platformSelections[platformId] = platforms[platformId].isSelected 
       }
     )
-
     savePlatformSelections(platformSelections)
     
   }, [platforms]);
 
-  const unaddedPlatforms = Object.values(platforms).filter(p => !p.isAdded);
-  const addedPlatforms = Object.values(platforms).filter(p=>p.isAdded);
-  const selectedPlatforms = Object.values(platforms).filter(p => p.isSelected);
-  const readyToPost = selectedPlatforms.length > 0;
+
 
   // When user triggeres connection automatically select platform
   const handleUserTriggeredConnect = (platformId: string) => {
@@ -136,11 +145,19 @@ const SocialPostingInterface = () => {
 
   useEffect(() => {
     const initAuth = async () => {
-      const stored = StorageService.getBlueSkyCredentials();
-      if (stored) {
-        const success = await blueSkyService.login(stored);
-        success ? handleConnect('bluesky') : handleDisconnect('bluesky');
+      if (platforms.bluesky.isAdded) {
+        const stored = StorageService.getBlueSkyCredentials();
+        if (stored) {
+          const success = await blueSkyService.login(stored);
+          if (success) {
+            handleConnect('bluesky')
+          };
+        }
       }
+
+      // TWITTER AUTH HERE
+
+
       setIsAppLoading(false);
     };
     initAuth();
@@ -158,6 +175,10 @@ const SocialPostingInterface = () => {
     return success;
   };
 
+  const unaddedPlatforms = Object.values(platforms).filter(p => !p.isAdded);
+  const addedPlatforms = Object.values(platforms).filter(p=>p.isAdded);
+  const selectedPlatforms = Object.values(platforms).filter(p => p.isSelected);
+  const readyToPost = selectedPlatforms.length > 0;
 
   const handlePost = async () => {
     if (!postText.trim() || isPosting) return;
@@ -217,6 +238,7 @@ const SocialPostingInterface = () => {
           addedPlatforms={addedPlatforms}
           onAddAccountClick={handleOpenAddPlatformModal}
           onTogglePlatform={togglePlatform}
+          onConnectPlatform={handleConnect}
         />
 
         {/* Main Posting Area */}

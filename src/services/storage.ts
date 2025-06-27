@@ -1,11 +1,34 @@
-import { BlueSkyCredentials, TwitterLocalCredentials, TwitterSessionCredentials, Platforms } from '../types';
+import { BlueSkyCredentials, TwitterLocalCredentials, TwitterSessionCredentials } from '../types';
 
 const STORAGE_KEYS = {
   BLUESKY_CREDENTIALS: 'just-post-bluesky-credentials',
   TWITTER_LOCAL_CREDENTIALS: 'just-post-twitter-local-credentials',
   TWITTER_SESSION_CREDENTIALS: 'just-post-twitter-session-credentials',
+  PLATFORM_ADDITIONS_KEY: 'just-post-platform-additions',
   PLATFORM_SELECTIONS_KEY: 'just-post-platform-selections'
 } as const;
+
+export const getPlatformsAdded = () => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.PLATFORM_ADDITIONS_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.error('Failed to getPlatformsAdded');
+    return null;
+  }
+
+}
+
+export const savePlatformAdditions = (addedPlatforms: Record<string, boolean>) => {
+  try {
+    localStorage.setItem(
+      STORAGE_KEYS.PLATFORM_ADDITIONS_KEY,
+      JSON.stringify(addedPlatforms)
+    ) 
+  } catch (error) {
+    console.error('Failed to savePlatformAdditions')
+  }
+}
 
 export const getPlatformSelections = () => {
   try {
@@ -25,7 +48,7 @@ export const savePlatformSelections = (platformSelections: Record<string, boolea
       JSON.stringify(platformSelections)
     ) 
   } catch (error) {
-    console.error('Failed to getPlatformSelections')
+    console.error('Failed to savePlatformSelections')
   }
 }
 
@@ -91,7 +114,6 @@ export class TwitterStorageService {
 
   }
 
-
   static getTwitterLocalCredentials(): TwitterLocalCredentials | null {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.TWITTER_LOCAL_CREDENTIALS);
@@ -102,7 +124,7 @@ export class TwitterStorageService {
     }
   }
 
-    static getTwitterSessionCredentials(): TwitterSessionCredentials | null {
+  static getTwitterSessionCredentials(): TwitterSessionCredentials | null {
     try {
       const stored = sessionStorage.getItem(STORAGE_KEYS.TWITTER_SESSION_CREDENTIALS);
       return stored ? JSON.parse(stored) : null;

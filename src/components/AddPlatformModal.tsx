@@ -11,7 +11,7 @@ interface AddPlatformModalProps {
 const AddPlatformModal = ({ availablePlatforms, onAdd, onClose }: AddPlatformModalProps )=> {
 
     return (
-        // Overlay blocking app
+    // Overlay blocking app
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
 
         {/* Platforms Container */}

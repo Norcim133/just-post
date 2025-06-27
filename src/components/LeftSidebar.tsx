@@ -1,17 +1,22 @@
-import { PlatformState } from '../types'
-import { Plus, Check } from 'lucide-react';
+import { PlatformState } from '../types';
+import { Plus } from 'lucide-react';
 import UserAccountButton from './UserAccountButton';
-
+import PlatformCard from './PlatformCard'; // <-- Import the new component
 
 interface LeftSidebarProps {
-    addedPlatforms: PlatformState[];
-    onAddAccountClick: () => void;
-    onTogglePlatform: (id: string) => void;
+  addedPlatforms: PlatformState[];
+  onAddAccountClick: () => void;
+  onTogglePlatform: (id: string) => void;
+  onConnectPlatform: (id: string) => void; // <-- Add the new prop
 }
 
-const LeftSidebar = ( { addedPlatforms, onAddAccountClick, onTogglePlatform } : LeftSidebarProps) => {
-
-    return (
+const LeftSidebar = ({
+  addedPlatforms,
+  onAddAccountClick,
+  onTogglePlatform,
+  onConnectPlatform, // <-- Receive the new prop
+}: LeftSidebarProps) => {
+  return (
       <div className="w-72 bg-white shadow-sm border-r border-slate-100 flex flex-col" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif' }}>
         
         {/* Add Account Button */}
@@ -25,41 +30,27 @@ const LeftSidebar = ( { addedPlatforms, onAddAccountClick, onTogglePlatform } : 
           </button>
         </div>
 
-        {/* Connected Platforms */}
-        <div className="flex-1 px-6 pb-4">
-          <h3 className="text-sm font-semibold text-slate-700 mb-4 tracking-wide uppercase">Connected Accounts</h3>
+      {/* Added Platforms */}
+      <div className="flex-1 px-6 pb-4">
+        <h3 className="text-sm font-semibold text-slate-700 mt-6 mb-4 tracking-wide uppercase">
+          Added Accounts
+        </h3>
 
-          <div className="space-y-3">
-
-            {addedPlatforms.map(platformState => (
-              <div 
-                key={platformState.id}
-                className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all duration-200 cursor-pointer bg-white"
-              >
-                <div className={`w-10 h-10 ${platformState.config.color} rounded-xl flex items-center justify-center text-white text-sm font-semibold shadow-sm`}>
-                  {platformState.config.icon}
-                </div>
-                <span className="flex-1 font-medium text-slate-700" style={{ fontSize: '15px', fontWeight: '500' }}>{platformState.config.name}</span>
-                <button
-                  onClick={() => onTogglePlatform(platformState.id)}
-                  
-                  className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
-                    platformState.isSelected
-                      ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm' 
-                      : 'border-slate-300 hover:border-slate-400 bg-white'
-                  }`}
-                >
-                  {platformState.isSelected && <Check size={14} />}
-                </button>
-              </div>
-            ))}
-          </div>
+        <div className="space-y-3">
+          {addedPlatforms.map((platformState) => (
+            <PlatformCard
+              key={platformState.id}
+              platform={platformState}
+              onToggleSelect={onTogglePlatform}
+              onConnect={onConnectPlatform} // <-- Pass the prop down
+            />
+          ))}
         </div>
-
-        <UserAccountButton/>
-
       </div>
-      )
+
+      <UserAccountButton />
+    </div>
+  );
 };
 
-export default LeftSidebar
+export default LeftSidebar;
