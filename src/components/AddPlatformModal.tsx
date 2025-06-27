@@ -30,16 +30,16 @@ const AddPlatformModal = ({ availablePlatforms, onAdd, onClose }: AddPlatformMod
                 </div>
                 <div className="flex flex-col gap-3">
                     { availablePlatforms.map(platformState => (
-                            <button
-                                key={platformState.id}
-                                onClick={() => onAdd(platformState.id)}
-                                className={`w-full flex items-center gap-3 px-6 py-4 ${platformState.config.color} text-white rounded-xl hover:opacity-90 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-medium text-base`}
-                                >
-                                <span className="text-2xl">{platformState.config.icon}</span>
-                                <span className="flex-1 text-left">Continue with {platformState.config.name}</span>
-                                <ChevronRight size={20} />
-                            </button>
-                        ))}
+                        <button
+                            key={platformState.id}
+                            onClick={() => onAdd(platformState.id)}
+                            className={`w-full flex items-center gap-3 px-6 py-4 ${platformState.config.color} text-white rounded-xl hover:opacity-90 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 font-medium text-base`}
+                            >
+                            <span className="text-2xl">{platformState.config.icon}</span>
+                            <span className="flex-1 text-left">Continue with {platformState.config.name}</span>
+                            <ChevronRight size={20} />
+                        </button>
+                    ))}
 
                 </div>
                 </div>

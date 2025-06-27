@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import LeftSidebar from './LeftSidebar';
 import { BlueSkyService } from '../services/bluesky';
 import { savePlatformSelections, getPlatformSelections, StorageService } from '../services/storage';
-import { BlueSkyCredentials, PlatformState, Platforms, PLATFORM_CONFIGS } from '../types';
+import { BlueSkyCredentials, Platforms, PLATFORM_CONFIGS } from '../types';
 import LoginModal from './LoginModal';
 import AddPlatformModal from './AddPlatformModal'
 import PreviewPanel from './PreviewPanel'
