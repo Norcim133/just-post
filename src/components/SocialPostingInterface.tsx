@@ -1,182 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import LeftSidebar from './LeftSidebar';
-import { BlueSkyService } from '../services/bluesky';
-import { savePlatformAdditions, getPlatformsAdded, savePlatformSelections, getPlatformSelections, TwitterStorageService, StorageService } from '../services/storage';
-import { BlueSkyCredentials, Platforms, PLATFORM_CONFIGS } from '../types';
 import LoginModal from './LoginModal';
 import AddPlatformModal from './AddPlatformModal'
 import PreviewPanel from './PreviewPanel'
 import PostingArea from './PostingArea';
 import { useAuth0 } from '@auth0/auth0-react';
-import { usePlatformConnections } from '../hooks/usePlatformConnections';
+import { usePlatformConnections } from '../hooks/usePlatformConnections'; 
+
 
 const SocialPostingInterface = () => {
+
+    const {
+        platforms,
+        activeModal,
+        setActiveModal,
+        isAppLoading,
+        togglePlatformSelect,
+        handleOpenAddPlatformModal,
+        handleConnect,
+        handleAddPlatform,
+        handleBlueSkyLogin,
+        blueSkyService
+    } = usePlatformConnections();
+
+
   const [postText, setPostText] = useState('');
   const [isPosting, setIsPosting] = useState(false);
   const { isLoading: isAuth0Loading } = useAuth0(); // Destructuring with renaming
-  const [isAppLoading, setIsAppLoading] = useState(true);
-
-  type ModalType = 'none' | 'addPlatform' | 'blueSkyLogin' | 'twitterLoginHelp';
-  const [activeModal, setActiveModal] = useState<ModalType>('none');
   
-
-  // Does init on first loard (due to useState doing a function approach) to get saved selections from storage
-  const [platforms, setPlatforms] = useState(() => {
-    
-    const initialConfigs: Platforms = {
-      bluesky: {
-        id: 'bluesky',
-        isAdded: false,
-        isConnected: false,
-        isSelected: false,
-        config: PLATFORM_CONFIGS.bluesky
-      },
-      twitter: {
-        id: 'twitter',
-        isAdded: false,
-        isConnected: false,
-        isSelected: false,
-        config: PLATFORM_CONFIGS.twitter
-      },
-      threads: {
-        id: 'threads',
-        isAdded: false,
-        isConnected: false,
-        isSelected: false,
-        config: PLATFORM_CONFIGS.threads
-      },
-      linkedin: {
-        id: 'linkedin',
-        isAdded: false,
-        isConnected: false,
-        isSelected: false,
-        config: PLATFORM_CONFIGS.linkedin
-      }
-    };
-
-    const savedAdditions = getPlatformsAdded();
-    const savedSelections = getPlatformSelections();
-
-
-    Object.keys(initialConfigs).forEach(platformId => {
-        if (savedAdditions && savedAdditions[platformId] !== undefined) {
-          initialConfigs[platformId].isAdded = savedAdditions[platformId];
-        }
-
-        if (savedSelections && initialConfigs[platformId].isAdded && savedSelections[platformId] !== undefined) {
-          initialConfigs[platformId].isSelected = savedSelections[platformId];
-        }
-
-      });
-    
-    return initialConfigs;
-  });
-
-  // PLATFORM ADDITIONS - Maintain user's selected platform across sessions
-  useEffect(() => {
-    const addedPlatforms: Record<string, boolean> = {};
-    Object.keys(platforms).forEach(
-      platformId => {
-        addedPlatforms[platformId] = platforms[platformId].isAdded 
-      }
-    )
-    savePlatformAdditions(addedPlatforms)
-    
-    const platformSelections: Record<string, boolean> = {};
-    Object.keys(platforms).forEach(
-      platformId => {
-        platformSelections[platformId] = platforms[platformId].isSelected 
-      }
-    )
-    savePlatformSelections(platformSelections)
-    
-  }, [platforms]);
-
-
-
-  // When user triggeres connection automatically select platform
-  const handleUserTriggeredConnect = (platformId: string) => {
-    setPlatforms(prev => ({
-      ...prev,
-      [platformId]: {
-        ...prev[platformId],
-        isAdded: true,
-        isConnected: true,
-        isSelected: true
-      }
-    }));
-  }
-
-  const handleConnect = (platformId: string) => {
-    setPlatforms(prev => ({
-      ...prev,
-      [platformId]: {
-        ...prev[platformId],
-        isAdded: true,
-        isConnected: true,
-      }
-    }));
-  }
-
-  const handleAddPlatform = (platformId: string) => {
-    setPlatforms(prev => ({
-      ...prev,
-      [platformId]: {
-        ...prev[platformId],
-        isAdded: true,
-        isConnected: false, 
-        isSelected: false,
-      }
-    }));
-    setActiveModal('none')
-  };
-
-  const handleDisconnect = (platformId: string) => {
-  setPlatforms(prev => ({
-    ...prev,
-    [platformId]: {
-      ...prev[platformId],
-      isConnected: false, // The primary change
-      isSelected: false,  // <--- Enforce this rule
-    }
-  }));
-};
-
-  const [blueSkyService] = useState(new BlueSkyService());
-
-  useEffect(() => {
-    const initAuth = async () => {
-      if (platforms.bluesky.isAdded) {
-        const stored = StorageService.getBlueSkyCredentials();
-        if (stored) {
-          const success = await blueSkyService.login(stored);
-          if (success) {
-            handleConnect('bluesky')
-          };
-        }
-      }
-
-      setIsAppLoading(false);
-    };
-    initAuth();
-  }, [blueSkyService]);
-
-  const handleBlueSkyLogin = async (credentials: BlueSkyCredentials) => {
-    const success = await blueSkyService.login(credentials);
-    if (success) {
-      StorageService.saveBlueSkyCredentials(credentials);
-      setActiveModal('none');
-      success ? handleUserTriggeredConnect('bluesky') : handleDisconnect('bluesky');
-
-    }
-    setIsAppLoading(false);
-    return success;
-  };
 
   const unaddedPlatforms = Object.values(platforms).filter(p => !p.isAdded);
   const addedPlatforms = Object.values(platforms).filter(p=>p.isAdded);
   const selectedPlatforms = Object.values(platforms).filter(p => p.isSelected);
   const readyToPost = selectedPlatforms.length > 0;
+
 
   const handlePost = async () => {
     if (!postText.trim() || isPosting) return;
@@ -198,27 +55,6 @@ const SocialPostingInterface = () => {
     setIsPosting(false);
   };
 
-  const togglePlatform = (platformId: string) => {
-    const platform = platforms[platformId];
-    // Rule: Don't do anything if the platform is not connected.
-    if (!platform.isConnected) {
-      return; 
-    }
-
-    setPlatforms(prev => ({
-      ...prev,
-      [platformId]: {
-        ...prev[platformId],
-        isSelected: !prev[platformId].isSelected
-      }
-    }));
-  };
-
-
-  const handleOpenAddPlatformModal = () => {
-    setActiveModal('addPlatform')
-  }
-
   if (isAuth0Loading || isAppLoading ) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
@@ -235,7 +71,7 @@ const SocialPostingInterface = () => {
         <LeftSidebar
           addedPlatforms={addedPlatforms}
           onAddAccountClick={handleOpenAddPlatformModal}
-          onTogglePlatform={togglePlatform}
+          onTogglePlatform={togglePlatformSelect}
           onConnectPlatform={handleConnect}
         />
 

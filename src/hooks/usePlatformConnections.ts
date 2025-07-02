@@ -1,135 +1,235 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { type Platforms, PLATFORM_CONFIGS } from '../types';
 import { BlueSkyService } from '../services/bluesky';
-import { TwitterService } from '../services/twitter';
 import { StorageService } from '../services/storage';
-import { type Platforms, type PlatformState, PLATFORM_CONFIGS } from '../types';
+import { BlueSkyCredentials } from '../types';
+import { TwitterService } from '../services/twitter';
 
-// Define the initial state for all platforms
-  // Does init on first loard (due to useState doing a function approach) to get saved selections from storage
-  const [platforms, setPlatforms] = useState(() => {
-    
-    const initialConfigs: Platforms = {
-      bluesky: {
-        id: 'bluesky',
-        isAdded: false,
-        isConnected: false,
-        isSelected: false,
-        config: PLATFORM_CONFIGS.bluesky
-      },
-      twitter: {
-        id: 'twitter',
-        isAdded: false,
-        isConnected: false,
-        isSelected: false,
-        config: PLATFORM_CONFIGS.twitter
-      },
-      threads: {
-        id: 'threads',
-        isAdded: false,
-        isConnected: false,
-        isSelected: false,
-        config: PLATFORM_CONFIGS.threads
-      },
-      linkedin: {
-        id: 'linkedin',
-        isAdded: false,
-        isConnected: false,
-        isSelected: false,
-        config: PLATFORM_CONFIGS.linkedin
-      }
-    };
+import { getPlatformsAdded, getPlatformSelections, savePlatformAdditions, savePlatformSelections } from '../services/storage';
 
-    const savedAdditions = getPlatformsAdded();
-    const savedSelections = getPlatformSelections();
+export interface UsePlatformConnectionsReturn {
+  platforms: Platforms;
+  activeModal: 'none' | 'blueSkyLogin';
+  isAppLoading: boolean;
+  //connectPlatform: (platformId: string, credentials?: any) => Promise<void>;
+  //addPlatform: (platformId: string) => void;
+  //selectPlatform: (platformId: string) => void;
+  //disconnectPlatform: (platformId: string) => void;
+  //closeModal: () => void;
+}
+
+const getInitialState = (): Platforms => {
+    {
+        
+        const initialConfigs: Platforms = {
+            bluesky: {
+                id: 'bluesky',
+                isAdded: false,
+                isConnected: false,
+                isSelected: false,
+                config: PLATFORM_CONFIGS.bluesky
+            },
+            twitter: {
+                id: 'twitter',
+                isAdded: false,
+                isConnected: false,
+                isSelected: false,
+                config: PLATFORM_CONFIGS.twitter
+            },
+            threads: {
+                id: 'threads',
+                isAdded: false,
+                isConnected: false,
+                isSelected: false,
+                config: PLATFORM_CONFIGS.threads
+            },
+            linkedin: {
+                id: 'linkedin',
+                isAdded: false,
+                isConnected: false,
+                isSelected: false,
+                config: PLATFORM_CONFIGS.linkedin
+            }
+        };
+
+        const savedAdditions = getPlatformsAdded();
+        const savedSelections = getPlatformSelections();
 
 
-    Object.keys(initialConfigs).forEach(platformId => {
-        if (savedAdditions && savedAdditions[platformId] !== undefined) {
-          initialConfigs[platformId].isAdded = savedAdditions[platformId];
-        }
+        Object.keys(initialConfigs).forEach(platformId => {
+            if (savedAdditions && savedAdditions[platformId] !== undefined) {
+            initialConfigs[platformId].isAdded = savedAdditions[platformId];
+            }
 
-        if (savedSelections && initialConfigs[platformId].isAdded && savedSelections[platformId] !== undefined) {
-          initialConfigs[platformId].isSelected = savedSelections[platformId];
-        }
+            if (savedSelections && initialConfigs[platformId].isAdded && savedSelections[platformId] !== undefined) {
+            initialConfigs[platformId].isSelected = savedSelections[platformId];
+            }
 
-      });
-    
-    return initialConfigs;
-  });
+        });
+        
+        return initialConfigs;
+    }
+}
 
 export function usePlatformConnections() {
-  const [platforms, setPlatforms] = useState<Platforms>(initialState);
-  const [activeModal, setActiveModal] = useState<'none' | 'blueSkyLogin'>('none');
 
-  // Instantiate services only once
-  const [blueSkyService] = useState(() => new BlueSkyService());
-  const [twitterService] = useState(() => new TwitterService());
+     // Does init on first load (due to useState doing a function approach) to get saved selections from storage
+    const [platforms, setPlatforms] = useState<Platforms>(getInitialState);
 
-  // --- REFRESH/INITIAL AUTH LOGIC ---
-  useEffect(() => {
-    const initConnections = async () => {
-      // Check BlueSky
-      const storedBlueSky = StorageService.getBlueSkyCredentials();
-      if (storedBlueSky) {
-        const success = await blueSkyService.login(storedBlueSky);
-        if (success) {
-          setPlatforms(p => ({ ...p, bluesky: { ...p.bluesky, isConnected: true, isAdded: true } }));
+    type ModalType = 'none' | 'addPlatform' | 'blueSkyLogin' | 'twitterLoginHelp';
+    const [activeModal, setActiveModal] = useState<ModalType>('none');
+    const [isAppLoading, setIsAppLoading] = useState(true);
+
+    // --- SERVICES ---
+    const [blueSkyService] = useState(() => new BlueSkyService());
+    const [twitterService] = useState(() => new TwitterService());
+
+    // --- MOUNTING AUTH ---
+
+    useEffect(() => {
+
+        const handleInitConnect = (platformId: string, isConnected: boolean) => {
+            setPlatforms(prev => ({
+                ...prev,
+                [platformId]: {
+                    ...prev[platformId],
+                    isConnected: isConnected,
+                }
+            }));
         }
-      }
-      
-      // TODO: Check Twitter (this will involve its own service method)
-      // const twitterConnected = await twitterService.checkInitialAuth();
-      // if (twitterConnected) { ... }
-    };
-    initConnections();
-  }, [blueSkyService, twitterService]); // Dependencies
-
-  // --- HANDLER FUNCTIONS ---
-  const connectPlatform = useCallback(async (platformId: string, credentials?: any) => {
-    let success = false;
-    switch (platformId) {
-      case 'bluesky':
-        // If we need credentials, we open the modal.
-        if (!credentials) {
-            setActiveModal('blueSkyLogin');
-            return; // Stop here, the modal will call this function again with credentials
-        }
-        success = await blueSkyService.login(credentials);
-        if (success) StorageService.saveBlueSkyCredentials(credentials);
-        break;
-
-      case 'twitter':
-        // Twitter's login is a redirect, it doesn't need a modal or credentials up front.
-        twitterService.login();
-        // The callback logic will handle setting the connection state.
-        return; 
+        const initConnections = async () => {
         
-      default:
-        console.warn(`Connection for ${platformId} not implemented.`);
-        return;
-    }
+            // BLUESKY
+            if (getInitialState().bluesky.isAdded) {
+                const storedBlueSky = StorageService.getBlueSkyCredentials();
+                if (storedBlueSky) {
+                const success = await blueSkyService.login(storedBlueSky);
 
-    if (success) {
-      setPlatforms(p => ({ ...p, [platformId]: { ...p[platformId], isConnected: true, isAdded: true, isSelected: true } }));
-      setActiveModal('none'); // Close modal on success
-    } else {
-        // Handle login failure (e.g., show an error)
-    }
-  }, [blueSkyService, twitterService]); // Dependencies for useCallback
+                handleInitConnect('bluesky', success)
+                }
+            }
 
-  const selectPlatform = useCallback((platformId: string) => {
-      setPlatforms(p => ({
-          ...p,
-          [platformId]: { ...p[platformId], isSelected: !p[platformId].isSelected }
+            // TWITTER
+
+
+
+            setIsAppLoading(false);
+        };
+        initConnections();
+    }, [blueSkyService]);
+
+
+    // SAVE ADDED PLATFORMS
+    useEffect(() => {
+        const addedPlatformsToSave: Record<string, boolean> = {};
+        Object.keys(platforms).forEach(platformId => {
+        addedPlatformsToSave[platformId] = platforms[platformId].isAdded;
+        });
+        savePlatformAdditions(addedPlatformsToSave);
+
+        const platformSelectionsToSave: Record<string, boolean> = {};
+        Object.keys(platforms).forEach(platformId => {
+        platformSelectionsToSave[platformId] = platforms[platformId].isSelected;
+        });
+        savePlatformSelections(platformSelectionsToSave);
+    }, [platforms]);
+    
+
+    // TOGGLE SELECTED PLATFORMS
+    const togglePlatformSelect = (platformId: string) => {
+        const platform = platforms[platformId];
+
+        // Rule: Don't do anything if the platform is not connected.
+        if (!platform.isConnected) {
+            return; 
+        }
+
+        setPlatforms(prev => ({
+        ...prev,
+        [platformId]: {
+            ...prev[platformId],
+            isSelected: !prev[platformId].isSelected
+        }
+        }));
+    };
+
+    // When user triggeres connection automatically select platform as a default
+    const handleUserTriggeredConnect = (platformId: string) => {
+        setPlatforms(prev => ({
+          ...prev,
+          [platformId]: {
+            ...prev[platformId],
+            isAdded: true,
+            isConnected: true,
+            isSelected: true
+          }
+        }));
+    }
+    
+    const handleConnect = (platformId: string) => {
+        setPlatforms(prev => ({
+          ...prev,
+          [platformId]: {
+            ...prev[platformId],
+            isAdded: true,
+            isConnected: true,
+          }
+        }));
+    }
+    
+    const handleAddPlatform = (platformId: string) => {
+        setPlatforms(prev => ({
+          ...prev,
+          [platformId]: {
+            ...prev[platformId],
+            isAdded: true,
+            isConnected: false, 
+            isSelected: false,
+          }
+        }));
+        setActiveModal('none')
+    };
+    
+    const handleDisconnect = (platformId: string) => {
+      setPlatforms(prev => ({
+        ...prev,
+        [platformId]: {
+          ...prev[platformId],
+          isConnected: false, 
+          isSelected: false,  
+        }
       }));
-  }, []);
+    };
 
-  // Return a clean API for the UI component to use
-  return { 
-      platforms, 
-      connectPlatform, 
-      selectPlatform,
-      activeModal,
-      setActiveModal
-  };
+
+    const handleOpenAddPlatformModal = () => {
+        setActiveModal('addPlatform')
+    }
+    
+
+
+    const handleBlueSkyLogin = async (credentials: BlueSkyCredentials) => {
+        const success = await blueSkyService.login(credentials);
+        if (success) {
+        StorageService.saveBlueSkyCredentials(credentials);
+        setActiveModal('none');
+        success ? handleUserTriggeredConnect('bluesky') : handleDisconnect('bluesky');
+
+        }
+        setIsAppLoading(false);
+        return success;
+    };
+
+    return {
+        platforms,
+        activeModal,
+        setActiveModal,
+        isAppLoading,
+        togglePlatformSelect,
+        handleOpenAddPlatformModal,
+        handleConnect,
+        handleAddPlatform,
+        handleBlueSkyLogin,
+        blueSkyService
+        };
 }
