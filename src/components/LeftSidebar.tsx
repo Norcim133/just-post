@@ -1,20 +1,20 @@
 import { PlatformState } from '../types';
 import { Plus } from 'lucide-react';
 import UserAccountButton from './UserAccountButton';
-import PlatformCard from './PlatformCard'; // <-- Import the new component
+import PlatformCard from './PlatformCard'; 
 
 interface LeftSidebarProps {
   addedPlatforms: PlatformState[];
   onAddAccountClick: () => void;
   onTogglePlatform: (id: string) => void;
-  onConnectPlatform: (id: string) => void; // <-- Add the new prop
+  onConnectPlatform: (id: string) => void; 
 }
 
 const LeftSidebar = ({
   addedPlatforms,
   onAddAccountClick,
   onTogglePlatform,
-  onConnectPlatform, // <-- Receive the new prop
+  onConnectPlatform, 
 }: LeftSidebarProps) => {
   return (
       <div className="w-72 bg-white shadow-sm border-r border-slate-100 flex flex-col" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif' }}>
@@ -42,7 +42,7 @@ const LeftSidebar = ({
               key={platformState.id}
               platform={platformState}
               onToggleSelect={onTogglePlatform}
-              onConnect={onConnectPlatform} // <-- Pass the prop down
+              onConnect={onConnectPlatform} 
             />
           ))}
         </div>

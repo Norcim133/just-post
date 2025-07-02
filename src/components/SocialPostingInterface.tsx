@@ -8,6 +8,7 @@ import AddPlatformModal from './AddPlatformModal'
 import PreviewPanel from './PreviewPanel'
 import PostingArea from './PostingArea';
 import { useAuth0 } from '@auth0/auth0-react';
+import { usePlatformConnections } from '../hooks/usePlatformConnections';
 
 const SocialPostingInterface = () => {
   const [postText, setPostText] = useState('');
@@ -17,7 +18,7 @@ const SocialPostingInterface = () => {
 
   type ModalType = 'none' | 'addPlatform' | 'blueSkyLogin' | 'twitterLoginHelp';
   const [activeModal, setActiveModal] = useState<ModalType>('none');
-
+  
 
   // Does init on first loard (due to useState doing a function approach) to get saved selections from storage
   const [platforms, setPlatforms] = useState(() => {
@@ -154,9 +155,6 @@ const SocialPostingInterface = () => {
           };
         }
       }
-
-      // TWITTER AUTH HERE
-
 
       setIsAppLoading(false);
     };
