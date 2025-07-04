@@ -6,6 +6,7 @@ import PreviewPanel from './PreviewPanel'
 import PostingArea from './PostingArea';
 import { useAuth0 } from '@auth0/auth0-react';
 import { usePlatformConnections } from '../hooks/usePlatformConnections'; 
+import { PostResult } from '../types';
 
 
 const SocialPostingInterface = () => {
@@ -20,7 +21,8 @@ const SocialPostingInterface = () => {
         handleUserTriggeredConnect,
         handleAddPlatform,
         handleBlueSkyLogin,
-        blueSkyService
+        blueSkyService,
+        twitterService
     } = usePlatformConnections();
 
 
@@ -36,22 +38,60 @@ const SocialPostingInterface = () => {
 
 
   const handlePost = async () => {
-    if (!postText.trim() || isPosting) return;
-    
-    if (!readyToPost) return;
+    if (!postText.trim() || isPosting || !readyToPost) return;
 
     setIsPosting(true);
-    try {
-      const result = await blueSkyService.createPost(postText);
-      if (result.success) {
-        setPostText('');
-        alert('Posted successfully!');
-      } else {
-        alert(`Post failed: ${result.error}`);
-      }
-    } catch (error) {
-      alert('Post failed: Unknown error');
+
+    const services: { [key: string]: { createPost: (text: string) => Promise<PostResult> } } = {
+        bluesky: blueSkyService,
+        twitter: twitterService,
+        // Map other services here
+    };
+
+    const postPromises = selectedPlatforms
+        .filter(p => services[p.id]) // Ensure we have a service for the platform
+        .map(p => 
+            services[p.id]
+                .createPost(postText)
+                .then(result => ({ ...result, platformName: p.config.name })) // Add name for reporting
+        );
+
+    const results = await Promise.allSettled(postPromises);
+
+    const successMessages: string[] = [];
+    const errorMessages: string[] = [];
+    let allSucceeded = true;
+
+    results.forEach(res => {
+        if (res.status === 'fulfilled') {
+            const postResult = res.value;
+            if (postResult.success) {
+                successMessages.push(postResult.platformName);
+            } else {
+                allSucceeded = false;
+                errorMessages.push(`${postResult.platformName}: ${postResult.error || 'Failed'}`);
+            }
+        } else {
+            allSucceeded = false;
+            // res.reason contains the error for a rejected promise
+            errorMessages.push(`A platform failed unexpectedly: ${res.reason?.message || 'Unknown error'}`);
+        }
+    });
+    
+    let alertMessage = '';
+    if (successMessages.length > 0) {
+      alertMessage += `Posted to: ${successMessages.join(', ')}\n`;
     }
+    if (errorMessages.length > 0) {
+      alertMessage += `Failed: ${errorMessages.join(', ')}`;
+    }
+
+    alert(alertMessage.trim() || 'No platforms were selected or an unknown error occurred.');
+
+    if (allSucceeded) {
+      setPostText('');
+    }
+
     setIsPosting(false);
   };
 
@@ -100,7 +140,7 @@ const SocialPostingInterface = () => {
         />
       )}
 
-      {/* BlueSky Login??? */}
+      {/* BlueSky Login Modal */}
       <LoginModal
         isOpen={activeModal === 'blueSkyLogin'}
         onClose={() => setActiveModal('none')}

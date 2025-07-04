@@ -1,10 +1,18 @@
+import { BskyAgent } from '@atproto/api';
 import { BlueSkyCredentials, PostResult } from '../types';
+import { BlueSkyStorageService } from './storage';
 
 const BLUESKY_API_BASE = 'https://bsky.social/xrpc';
 
 export class BlueSkyService {
   private accessJwt: string | null = null;
   private did: string | null = null;
+
+  logout(): void {
+    this.accessJwt = null;
+    this.did = null;
+    BlueSkyStorageService.removeBlueSkyCredentials();
+  }
 
   async login(credentials: BlueSkyCredentials): Promise<boolean> {
     try {
@@ -55,6 +63,7 @@ export class BlueSkyService {
           collection: 'app.bsky.feed.post',
           record: {
             text,
+            $type: 'app.bsky.feed.post',
             createdAt: new Date().toISOString(),
           },
         }),

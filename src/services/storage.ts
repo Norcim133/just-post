@@ -8,6 +8,7 @@ const STORAGE_KEYS = {
   PLATFORM_SELECTIONS_KEY: 'just-post-platform-selections'
 } as const;
 
+// ... (get/save PlatformAdditions and PlatformSelections functions remain the same) ...
 export const getPlatformsAdded = () => {
   try {
     const stored = localStorage.getItem(STORAGE_KEYS.PLATFORM_ADDITIONS_KEY);
@@ -51,6 +52,7 @@ export const savePlatformSelections = (platformSelections: Record<string, boolea
     console.error('Failed to savePlatformSelections')
   }
 }
+
 
 export class BlueSkyStorageService {
   
@@ -143,4 +145,11 @@ export class TwitterStorageService {
     }
   }
 
+  static removeTwitterLocalCredentials(): void {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.TWITTER_LOCAL_CREDENTIALS);
+    } catch (error) {
+      console.error('Failed to remove Twitter local credentials:', error);
+    }
+  }
 }
