@@ -17,7 +17,7 @@ const SocialPostingInterface = () => {
         isAppLoading,
         togglePlatformSelect,
         handleOpenAddPlatformModal,
-        handleConnect,
+        handleUserTriggeredConnect,
         handleAddPlatform,
         handleBlueSkyLogin,
         blueSkyService
@@ -72,7 +72,7 @@ const SocialPostingInterface = () => {
           addedPlatforms={addedPlatforms}
           onAddAccountClick={handleOpenAddPlatformModal}
           onTogglePlatform={togglePlatformSelect}
-          onConnectPlatform={handleConnect}
+          onConnectPlatform={handleUserTriggeredConnect}
         />
 
         {/* Main Posting Area */}

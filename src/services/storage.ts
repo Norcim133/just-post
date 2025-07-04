@@ -52,7 +52,7 @@ export const savePlatformSelections = (platformSelections: Record<string, boolea
   }
 }
 
-export class StorageService {
+export class BlueSkyStorageService {
   
   static saveBlueSkyCredentials(credentials: BlueSkyCredentials): void {
     try {

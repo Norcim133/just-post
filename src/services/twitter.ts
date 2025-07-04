@@ -265,6 +265,11 @@ export class TwitterService {
         // Generate a random state token for CSRF protection
         // Generate a nonce and compare it on the redirect from the auth server
         // Can use it to store or find reference to the user's session (i.e. where use left)
-        return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        const stateData = {
+            platform: 'twitter',
+            nonce: Math.random().toString(36).substring(2) // The random part for CSRF
+        };
+        const stateToken = btoa(JSON.stringify(stateData));
+        return stateToken
     }
 }

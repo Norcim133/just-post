@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo,  } from 'react';
 import { type Platforms, PLATFORM_CONFIGS } from '../types';
 import { BlueSkyService } from '../services/bluesky';
-import { StorageService } from '../services/storage';
+import { BlueSkyStorageService } from '../services/storage';
 import { BlueSkyCredentials } from '../types';
 import { TwitterService } from '../services/twitter';
 
@@ -71,6 +71,8 @@ const getInitialState = (): Platforms => {
     }
 }
 
+
+
 export function usePlatformConnections() {
 
      // Does init on first load (due to useState doing a function approach) to get saved selections from storage
@@ -83,6 +85,31 @@ export function usePlatformConnections() {
     // --- SERVICES ---
     const [blueSkyService] = useState(() => new BlueSkyService());
     const [twitterService] = useState(() => new TwitterService());
+
+
+
+    // This map links a platform ID to the function that starts its connection process.
+    const platformConnectActions = useMemo(() => ({
+        bluesky: () => {
+            setActiveModal('blueSkyLogin');
+        },
+        twitter: () => {
+        // For Twitter, "connecting" means starting the OAuth redirect flow.
+        twitterService.login();
+        },
+
+        // linkedin: () => { linkedinService.login(); }
+    }), [twitterService]); // Dependency array ensures this object is stable.
+
+
+    const handleUserTriggeredConnect = (platformId: string) => {
+        // Check if the platformId is a valid key in our actions map
+        if (platformId in platformConnectActions) {
+            const connectAction = platformConnectActions[platformId as keyof typeof platformConnectActions];            
+            connectAction();
+        }
+    };
+
 
     // --- MOUNTING AUTH ---
 
@@ -101,22 +128,25 @@ export function usePlatformConnections() {
         
             // BLUESKY
             if (getInitialState().bluesky.isAdded) {
-                const storedBlueSky = StorageService.getBlueSkyCredentials();
+                const storedBlueSky = BlueSkyStorageService.getBlueSkyCredentials();
                 if (storedBlueSky) {
-                const success = await blueSkyService.login(storedBlueSky);
-
-                handleInitConnect('bluesky', success)
+                    const success = await blueSkyService.login(storedBlueSky);
+                    handleInitConnect('bluesky', success)
                 }
             }
 
             // TWITTER
-
-
+            if (getInitialState().twitter.isAdded) {
+                if (!twitterService.isAuthenticated()) {
+                    await twitterService.login()
+                }
+                handleInitConnect('twitter', twitterService.isAuthenticated())
+            }
 
             setIsAppLoading(false);
         };
         initConnections();
-    }, [blueSkyService]);
+    }, [blueSkyService, twitterService]);
 
 
     // SAVE ADDED PLATFORMS
@@ -153,29 +183,7 @@ export function usePlatformConnections() {
         }));
     };
 
-    // When user triggeres connection automatically select platform as a default
-    const handleUserTriggeredConnect = (platformId: string) => {
-        setPlatforms(prev => ({
-          ...prev,
-          [platformId]: {
-            ...prev[platformId],
-            isAdded: true,
-            isConnected: true,
-            isSelected: true
-          }
-        }));
-    }
-    
-    const handleConnect = (platformId: string) => {
-        setPlatforms(prev => ({
-          ...prev,
-          [platformId]: {
-            ...prev[platformId],
-            isAdded: true,
-            isConnected: true,
-          }
-        }));
-    }
+
     
     const handleAddPlatform = (platformId: string) => {
         setPlatforms(prev => ({
@@ -206,19 +214,58 @@ export function usePlatformConnections() {
         setActiveModal('addPlatform')
     }
     
-
-
     const handleBlueSkyLogin = async (credentials: BlueSkyCredentials) => {
+        setIsAppLoading(true);
         const success = await blueSkyService.login(credentials);
         if (success) {
-        StorageService.saveBlueSkyCredentials(credentials);
-        setActiveModal('none');
-        success ? handleUserTriggeredConnect('bluesky') : handleDisconnect('bluesky');
-
+            BlueSkyStorageService.saveBlueSkyCredentials(credentials);    
         }
+            // NOW we update the state, because we know it succeeded.
+        setPlatforms(prev => ({
+            ...prev,
+            bluesky: { ...prev.bluesky, isConnected: success, isSelected: success }
+        }));
+        setActiveModal('none');
         setIsAppLoading(false);
         return success;
     };
+
+    useEffect(() => {
+        // This function will be called if we find the right URL parameters.
+        const processTwitterCallback = async (code: string, state: string) => {
+            setIsAppLoading(true);
+
+            // Tell the TwitterService expert to handle the complex callback logic.
+            const success = await twitterService.handleCallback(code, state);
+
+            // Based on the result, update the application state.
+            setPlatforms(prev => ({
+            ...prev,
+            twitter: {
+                ...prev.twitter,
+                isConnected: success,
+                isAdded: true, // If we're handling a callback, it must have been added.
+                isSelected: success // Select it if the connection was successful.
+            }
+            }));
+            
+            // Clean up the URL in the browser's address bar so the user doesn't
+            // see the code and state anymore. This also prevents re-processing on refresh.
+            window.history.replaceState({}, document.title, window.location.pathname);
+
+            setIsAppLoading(false);
+        };
+
+        // Check the current URL for the parameters that Twitter sends on redirect.
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+
+        // If both `code` and `state` exist, we know we're on the callback redirect.
+        if (code && state) {
+            processTwitterCallback(code, state);
+        }
+    }, [twitterService]);
 
     return {
         platforms,
@@ -227,7 +274,7 @@ export function usePlatformConnections() {
         isAppLoading,
         togglePlatformSelect,
         handleOpenAddPlatformModal,
-        handleConnect,
+        handleUserTriggeredConnect,
         handleAddPlatform,
         handleBlueSkyLogin,
         blueSkyService
