@@ -1,5 +1,6 @@
 
 import { PlatformConfig } from '../types';
+import { cn } from '../lib/utils';
 
 const PlatformPreview = ({ text, platformConfig }: { text: string, platformConfig: PlatformConfig }) => {
     const LIMIT = platformConfig.charLimit;
@@ -8,10 +9,13 @@ const PlatformPreview = ({ text, platformConfig }: { text: string, platformConfi
     const overflowText = text.slice(LIMIT);
 
     return (
-        <div className="relative p-4 m-6 bg-white rounded-lg border border-black">
+        <div className="relative p-4 m-2 mt-4 mb-12 bg-white rounded-lg border border-black">
 
             {/* Platform Badge */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 flex w-12 h-12 bg-sky-500 items-center justify-center rounded-full  shadow-slate-700/40">
+            <div className={cn(
+                "absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 flex w-12 h-12 items-center justify-center rounded-full shadow-slate-700/40 text-white text-xl font-semibold",
+                platformConfig.color
+            )}>
                 {platformConfig.icon}
             </div>
 

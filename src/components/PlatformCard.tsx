@@ -25,15 +25,19 @@ const PlatformCard = ({ platform, onToggleSelect, onConnect }: PlatformCardProps
       // Only make the whole card clickable for selection if connected
       onClick={() => isConnected && onToggleSelect(id)}
     >
-      {/* Icon */}
-      <div
+        {/* Icon */}
+        <div
         className={cn(
-          `w-10 h-10 ${color} rounded-lg flex items-center justify-center text-white text-xl font-semibold shadow-inner shadow-black/10 transition-all`,
-          !isConnected && 'grayscale w-6 h-6 text-xs mt-2 mb-2' // Desaturate the icon when not connected
+            // Static classes go here
+            'w-10 h-10 rounded-lg flex items-center justify-center text-white text-xl font-semibold shadow-inner shadow-black/10 transition-all',
+            // Dynamic variable class goes here
+            color,
+            // Conditional classes go here
+            !isConnected && 'grayscale w-6 h-6 text-xs mt-2 mb-2'
         )}
-      >
+        >
         {icon}
-      </div>
+        </div>
 
       {/* Platform Name */}
       <span
