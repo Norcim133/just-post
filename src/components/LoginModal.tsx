@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { X } from 'lucide-react';
 import { BlueSkyCredentials } from '../types';
 
@@ -8,7 +8,7 @@ interface LoginModalProps {
   onLogin: (credentials: BlueSkyCredentials) => Promise<boolean>;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => {
+const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
