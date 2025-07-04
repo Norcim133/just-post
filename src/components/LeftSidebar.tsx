@@ -8,14 +8,10 @@ interface LeftSidebarProps {
   onAddAccountClick: () => void;
   onTogglePlatform: (id: string) => void;
   onConnectPlatform: (id: string) => void; 
+  onMasterLogout: () => void;
 }
 
-const LeftSidebar = ({
-  addedPlatforms,
-  onAddAccountClick,
-  onTogglePlatform,
-  onConnectPlatform, 
-}: LeftSidebarProps) => {
+const LeftSidebar = ({ addedPlatforms, onAddAccountClick, onTogglePlatform, onConnectPlatform, onMasterLogout }: LeftSidebarProps) => {
   return (
       <div className="w-72 bg-white shadow-sm border-r border-slate-100 flex flex-col" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif' }}>
         
@@ -48,7 +44,9 @@ const LeftSidebar = ({
         </div>
       </div>
 
-      <UserAccountButton />
+      <UserAccountButton
+        onMasterLogout={onMasterLogout}
+      />
     </div>
   );
 };

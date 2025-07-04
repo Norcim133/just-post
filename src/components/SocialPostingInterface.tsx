@@ -21,6 +21,7 @@ const SocialPostingInterface = () => {
         handleUserTriggeredConnect,
         handleAddPlatform,
         handleBlueSkyLogin,
+        handleMasterLogout,
         blueSkyService,
         twitterService
     } = usePlatformConnections();
@@ -99,10 +100,10 @@ const SocialPostingInterface = () => {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
         <div className="text-xl text-slate-600">Loading...</div>
-        {/* Or a fancy spinner component */}
       </div>
     )
   }
+
 
   return (
     <div className="flex h-screen bg-slate-50">
@@ -113,6 +114,7 @@ const SocialPostingInterface = () => {
           onAddAccountClick={handleOpenAddPlatformModal}
           onTogglePlatform={togglePlatformSelect}
           onConnectPlatform={handleUserTriggeredConnect}
+          onMasterLogout={handleMasterLogout}
         />
 
         {/* Main Posting Area */}

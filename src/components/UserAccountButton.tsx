@@ -2,11 +2,14 @@ import { useState } from 'react';
 import { Settings } from 'lucide-react';
 import { useAuth0 } from '@auth0/auth0-react'; 
 
+interface UserAccountButtonProps{
+  onMasterLogout: () => void;
+}
 
-const UserAccountButton = () => {
+const UserAccountButton = ({ onMasterLogout }: UserAccountButtonProps) => {
 
     const [showUserMenu, setShowUserMenu] = useState(false);
-    const { logout, user, loginWithRedirect, isAuthenticated } = useAuth0();
+    const { user, loginWithRedirect, isAuthenticated } = useAuth0();
 
 
     return (
@@ -72,8 +75,8 @@ const UserAccountButton = () => {
               <hr className="border-slate-200" />
               <button
                 onClick={() => {
-                  logout({ logoutParams: { returnTo: window.location.origin } });
                   setShowUserMenu(false);
+                  onMasterLogout();
                 }}
                 className="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
               >

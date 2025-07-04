@@ -4,6 +4,7 @@ import { BlueSkyService } from '../services/bluesky';
 import { BlueSkyStorageService } from '../services/storage';
 import { BlueSkyCredentials } from '../types';
 import { TwitterService } from '../services/twitter';
+import { useAuth0 } from '@auth0/auth0-react';
 
 import { getPlatformsAdded, getPlatformSelections, savePlatformAdditions, savePlatformSelections } from '../services/storage';
 
@@ -16,7 +17,7 @@ export interface UsePlatformConnectionsReturn {
   handleUserTriggeredConnect: (platformId: string) => void;
   handleAddPlatform: (platformId: string) => void;
   handleBlueSkyLogin: (credentials: BlueSkyCredentials) => Promise<boolean>;
-  handleLogoutPlatform: (platformId: string) => void;
+  handleMasterLogout: () => void;
   setActiveModal: React.Dispatch<React.SetStateAction<'none' | 'addPlatform' | 'blueSkyLogin' | 'twitterLoginHelp'>>;
   blueSkyService: BlueSkyService;
   twitterService: TwitterService;
@@ -92,6 +93,9 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
 
 
 
+    const { logout } = useAuth0();
+
+
     // This map links a platform ID to the function that starts its connection process.
     const platformConnectActions = useMemo(() => ({
         bluesky: () => {
@@ -107,7 +111,7 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
 
 
     const handleUserTriggeredConnect = (platformId: string) => {
-        // Check if the platformId is a valid key in our actions map
+        // Check if the platformId is a valid key in our actions 
         if (platformId in platformConnectActions) {
             const connectAction = platformConnectActions[platformId as keyof typeof platformConnectActions];            
             connectAction();
@@ -200,6 +204,7 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
         setActiveModal('none')
     };
     
+
     const handleLogoutPlatform = (platformId: string) => {
       if (platformId === 'bluesky') {
         blueSkyService.logout();
@@ -216,6 +221,44 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
         }
       }));
     };
+
+    const handleMasterLogout = async () => {
+        const connectedPlatforms = Object.values(platforms).filter(p => p.isConnected);
+
+        // 1. Create an array of logout promises from all connected platforms.
+        const logoutPromises = connectedPlatforms.map(platform => {
+            if (platform.id === 'twitter') {
+                return twitterService.logout();
+            }
+            if (platform.id === 'bluesky') {
+                return blueSkyService.logout();
+            }
+            // Add other platforms here in the future
+            return Promise.resolve(); // Return a resolved promise for unhandled platforms
+        });
+
+        try {
+            // 2. Wait for ALL platform logout operations (token revocations) to complete.
+            await Promise.all(logoutPromises);
+            console.log("All platform tokens revoked successfully.");
+        } catch (error) {
+            console.error("An error occurred during platform token revocation:", error);
+            // We proceed to the main logout even if one of the revocations failed.
+        }
+        
+        // 3. Now that all tokens are revoked, reset the local UI state for all platforms.
+        setPlatforms(prev => {
+            const newPlatforms = { ...prev };
+            connectedPlatforms.forEach(p => {
+                newPlatforms[p.id] = { ...newPlatforms[p.id], isConnected: false, isSelected: false };
+            });
+            return newPlatforms;
+        });
+
+
+        // Auth0 logout
+        logout({ logoutParams: { returnTo: window.location.origin } })
+    }
 
 
     const handleOpenAddPlatformModal = () => {
@@ -302,7 +345,7 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
         handleUserTriggeredConnect,
         handleAddPlatform,
         handleBlueSkyLogin,
-        handleLogoutPlatform,
+        handleMasterLogout,
         blueSkyService,
         twitterService
         };
