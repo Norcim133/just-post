@@ -1,4 +1,3 @@
-import { BskyAgent } from '@atproto/api';
 import { BlueSkyCredentials, PostResult } from '../types';
 import { BlueSkyStorageService } from './storage';
 

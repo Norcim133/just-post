@@ -205,22 +205,22 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
     };
     
 
-    const handleLogoutPlatform = (platformId: string) => {
-      if (platformId === 'bluesky') {
-        blueSkyService.logout();
-      } else if (platformId === 'twitter') {
-        twitterService.logout();
-      }
+    // const handleLogoutPlatform = (platformId: string) => {
+    //   if (platformId === 'bluesky') {
+    //     blueSkyService.logout();
+    //   } else if (platformId === 'twitter') {
+    //     twitterService.logout();
+    //   }
       
-      setPlatforms(prev => ({
-        ...prev,
-        [platformId]: {
-          ...prev[platformId],
-          isConnected: false, 
-          isSelected: false,  
-        }
-      }));
-    };
+    //   setPlatforms(prev => ({
+    //     ...prev,
+    //     [platformId]: {
+    //       ...prev[platformId],
+    //       isConnected: false, 
+    //       isSelected: false,  
+    //     }
+    //   }));
+    // };
 
     const handleMasterLogout = async () => {
         const connectedPlatforms = Object.values(platforms).filter(p => p.isConnected);
@@ -245,7 +245,7 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
             console.error("An error occurred during platform token revocation:", error);
             // We proceed to the main logout even if one of the revocations failed.
         }
-        
+
         // 3. Now that all tokens are revoked, reset the local UI state for all platforms.
         setPlatforms(prev => {
             const newPlatforms = { ...prev };
