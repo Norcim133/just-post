@@ -93,7 +93,7 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
 
 
 
-    const { logout } = useAuth0();
+    const { logout, isLoading: isAuth0Loading } = useAuth0();
 
 
     // This map links a platform ID to the function that starts its connection process.
@@ -120,8 +120,11 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
 
 
     // --- MOUNTING AUTH ---
-
     useEffect(() => {
+
+        if (isAuth0Loading) {
+            return; // Exit early if Auth0 is still working.
+        }
 
         const handleInitConnect = (platformId: string, isConnected: boolean) => {
             setPlatforms(prev => ({
