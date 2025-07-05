@@ -157,7 +157,7 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
         };
         initConnections();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [blueSkyService, twitterService]);
+    }, [isAuth0Loading, blueSkyService, twitterService]);
 
 
     // SAVE ADDED PLATFORMS
