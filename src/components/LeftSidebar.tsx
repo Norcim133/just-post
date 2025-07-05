@@ -2,6 +2,7 @@ import { PlatformState } from '../types';
 import { Plus } from 'lucide-react';
 import UserAccountButton from './UserAccountButton';
 import PlatformCard from './PlatformCard'; 
+import { useAuth0 } from '@auth0/auth0-react';
 
 interface LeftSidebarProps {
   addedPlatforms: PlatformState[];
@@ -12,6 +13,9 @@ interface LeftSidebarProps {
 }
 
 const LeftSidebar = ({ addedPlatforms, onAddAccountClick, onTogglePlatform, onConnectPlatform, onMasterLogout }: LeftSidebarProps) => {
+  
+  const { isAuthenticated } = useAuth0();
+
   return (
       <div className="w-72 bg-white shadow-sm border-r border-slate-100 flex flex-col" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif' }}>
         
@@ -20,6 +24,7 @@ const LeftSidebar = ({ addedPlatforms, onAddAccountClick, onTogglePlatform, onCo
           <button
             onClick={onAddAccountClick}
             className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all duration-200 font-medium shadow-sm"
+            disabled={!isAuthenticated}
             >
             <Plus size={18} />
             Add Account
@@ -33,14 +38,16 @@ const LeftSidebar = ({ addedPlatforms, onAddAccountClick, onTogglePlatform, onCo
         </h3>
 
         <div className="space-y-3">
-          {addedPlatforms.map((platformState) => (
-            <PlatformCard
-              key={platformState.id}
-              platform={platformState}
-              onToggleSelect={onTogglePlatform}
-              onConnect={onConnectPlatform} 
-            />
-          ))}
+            {isAuthenticated && (
+                addedPlatforms.map((platformState) => (
+                  <PlatformCard
+                  key={platformState.id}
+                  platform={platformState}
+                  onToggleSelect={onTogglePlatform}
+                  onConnect={onConnectPlatform} 
+                  />
+                ))
+            )}
         </div>
       </div>
 

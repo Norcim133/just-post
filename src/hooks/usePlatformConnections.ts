@@ -205,23 +205,6 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
     };
     
 
-    // const handleLogoutPlatform = (platformId: string) => {
-    //   if (platformId === 'bluesky') {
-    //     blueSkyService.logout();
-    //   } else if (platformId === 'twitter') {
-    //     twitterService.logout();
-    //   }
-      
-    //   setPlatforms(prev => ({
-    //     ...prev,
-    //     [platformId]: {
-    //       ...prev[platformId],
-    //       isConnected: false, 
-    //       isSelected: false,  
-    //     }
-    //   }));
-    // };
-
     const handleMasterLogout = async () => {
         const connectedPlatforms = Object.values(platforms).filter(p => p.isConnected);
 
