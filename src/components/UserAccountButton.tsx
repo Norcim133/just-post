@@ -1,16 +1,32 @@
 import { useState } from 'react';
 import { Settings } from 'lucide-react';
-import { useAuth0 } from '@auth0/auth0-react'; 
+import { authClient } from '../lib/authClient';
 
-interface UserAccountButtonProps{
-  onMasterLogout: () => void;
-}
 
-const UserAccountButton = ({ onMasterLogout }: UserAccountButtonProps) => {
+
+const UserAccountButton = () => {
 
     const [showUserMenu, setShowUserMenu] = useState(false);
-    const { user, loginWithRedirect, isAuthenticated } = useAuth0();
+    const { data: session } = authClient.useSession();
+    const isAuthenticated = session
+    const user = session?.user
 
+    const handleLogout = async () => {
+        await authClient.signOut({
+            fetchOptions: {
+                onSuccess: () => {
+                    // Reload the page to reset all state and show the login page
+                    window.location.href = '/';
+                }
+            }
+        });
+    };
+
+    const loginWithRedirect = () => {
+        // In our new setup, the App component handles showing the login page.
+        // For now, we can just reload to get there.
+        window.location.href = '/';
+    }
 
     return (
         //User Account
@@ -54,7 +70,7 @@ const UserAccountButton = ({ onMasterLogout }: UserAccountButtonProps) => {
             <div className="absolute bottom-full left-6 right-6 mb-2 bg-white rounded-xl shadow-lg border border-slate-200 p-4 space-y-3">
               <div className="text-sm space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-slate-600">Auth0 Status:</span>
+                  <span className="text-slate-600">Auth Status:</span>
                   <span className={`font-medium ${isAuthenticated ? 'text-green-600' : 'text-red-600'}`}>
                     {isAuthenticated ? 'Authenticated' : 'Not Authenticated'}
                   </span>
@@ -63,11 +79,11 @@ const UserAccountButton = ({ onMasterLogout }: UserAccountButtonProps) => {
                   <>
                     <div className="flex justify-between">
                       <span className="text-slate-600">User ID:</span>
-                      <span className="font-mono text-xs text-slate-700 align-middle">{user.sub?.split('|')[1].slice(0,10)}...</span>
+                      <span className="font-mono text-xs text-slate-700 align-middle">{user.user.id}...</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-600">Provider:</span>
-                      <span className="text-slate-700">{user.sub?.split('|')[0]}</span>
+                      <span className="text-slate-700">Better Auth</span>
                     </div>
                   </>
                 )}
@@ -76,7 +92,7 @@ const UserAccountButton = ({ onMasterLogout }: UserAccountButtonProps) => {
               <button
                 onClick={() => {
                   setShowUserMenu(false);
-                  onMasterLogout();
+                  handleLogout();
                 }}
                 className="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
               >

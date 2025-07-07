@@ -4,7 +4,6 @@ import LoginModal from './LoginModal';
 import AddPlatformModal from './AddPlatformModal'
 import PreviewPanel from './PreviewPanel'
 import PostingArea from './PostingArea';
-import { useAuth0 } from '@auth0/auth0-react';
 import { usePlatformConnections } from '../hooks/usePlatformConnections'; 
 import { PostResult } from '../types';
 
@@ -15,13 +14,11 @@ const SocialPostingInterface = () => {
         platforms,
         activeModal,
         setActiveModal,
-        isAppLoading,
         togglePlatformSelect,
         handleOpenAddPlatformModal,
         handleUserTriggeredConnect,
         handleAddPlatform,
         handleBlueSkyLogin,
-        handleMasterLogout,
         blueSkyService,
         twitterService
     } = usePlatformConnections();
@@ -29,7 +26,6 @@ const SocialPostingInterface = () => {
 
   const [postText, setPostText] = useState('');
   const [isPosting, setIsPosting] = useState(false);
-  const { isLoading: isAuth0Loading } = useAuth0(); // Destructuring with renaming
   
 
   const unaddedPlatforms = Object.values(platforms).filter(p => !p.isAdded);
@@ -96,13 +92,6 @@ const SocialPostingInterface = () => {
     setIsPosting(false);
   };
 
-  if (isAuth0Loading || isAppLoading ) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
-        <div className="text-xl text-slate-600">Loading...</div>
-      </div>
-    )
-  }
 
 
   return (
@@ -114,7 +103,6 @@ const SocialPostingInterface = () => {
           onAddAccountClick={handleOpenAddPlatformModal}
           onTogglePlatform={togglePlatformSelect}
           onConnectPlatform={handleUserTriggeredConnect}
-          onMasterLogout={handleMasterLogout}
         />
 
         {/* Main Posting Area */}

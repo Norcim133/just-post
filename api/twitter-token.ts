@@ -21,7 +21,7 @@ export default async function handler(
         return response.status(400).json({ error: 'Invalid grant_type' });
     }
 
-    const CLIENT_ID = process.env.VITE_TWITTER_CLIENT_ID;
+    const CLIENT_ID = process.env.TWITTER_CLIENT_ID;
     const CLIENT_SECRET = process.env.TWITTER_CLIENT_SECRET;
 
     if (!CLIENT_ID || !CLIENT_SECRET) {

@@ -2,19 +2,19 @@ import { PlatformState } from '../types';
 import { Plus } from 'lucide-react';
 import UserAccountButton from './UserAccountButton';
 import PlatformCard from './PlatformCard'; 
-import { useAuth0 } from '@auth0/auth0-react';
+import { authClient } from '../lib/authClient';
+
 
 interface LeftSidebarProps {
   addedPlatforms: PlatformState[];
   onAddAccountClick: () => void;
   onTogglePlatform: (id: string) => void;
   onConnectPlatform: (id: string) => void; 
-  onMasterLogout: () => void;
 }
 
-const LeftSidebar = ({ addedPlatforms, onAddAccountClick, onTogglePlatform, onConnectPlatform, onMasterLogout }: LeftSidebarProps) => {
+const LeftSidebar = ({ addedPlatforms, onAddAccountClick, onTogglePlatform, onConnectPlatform }: LeftSidebarProps) => {
   
-  const { isAuthenticated } = useAuth0();
+  const { data: isAuthenticated } = authClient.useSession();
 
   return (
       <div className="w-72 bg-white shadow-sm border-r border-slate-100 flex flex-col" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif' }}>
@@ -51,9 +51,7 @@ const LeftSidebar = ({ addedPlatforms, onAddAccountClick, onTogglePlatform, onCo
         </div>
       </div>
 
-      <UserAccountButton
-        onMasterLogout={onMasterLogout}
-      />
+      <UserAccountButton/>
     </div>
   );
 };

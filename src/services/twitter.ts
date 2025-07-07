@@ -12,7 +12,7 @@ interface TokenResponse {
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export class TwitterService {
-    private clientID: string | null = import.meta.env.VITE_TWITTER_CLIENT_ID
+    private clientID: string | null = import.meta.env.TWITTER_CLIENT_ID
     private callbackURI: string | null = import.meta.env.VITE_TWITTER_CALLBACK_URI
     private accessToken: string | null = null;
     private refreshToken: string | null = null;

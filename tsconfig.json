@@ -7,12 +7,18 @@
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
 
-    /* Bundler mode */
+    /* --- This is the corrected, stable configuration --- */
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
+    "noEmit": true, // Vite handles the emitting
     "jsx": "react-jsx",
+
+    /* Aliases for IDE and Vite */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
 
     /* Linting */
     "strict": true,
@@ -20,6 +26,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "api/**/*.ts"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src", "api"]
 }
