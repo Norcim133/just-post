@@ -13,6 +13,7 @@ const SocialPostingInterface = () => {
     const {
         platforms,
         activeModal,
+        isAppLoading,
         setActiveModal,
         togglePlatformSelect,
         handleOpenAddPlatformModal,
@@ -93,6 +94,13 @@ const SocialPostingInterface = () => {
   };
 
 
+  if (isAppLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="text-xl text-slate-600">Loading Session...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-slate-50">

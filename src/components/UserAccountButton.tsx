@@ -9,7 +9,8 @@ const UserAccountButton = () => {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const { data: session } = authClient.useSession();
     const isAuthenticated = session
-    const user = session?.user
+    //TODO: Refactor to turn into a user
+    
 
     const handleLogout = async () => {
         await authClient.signOut({
@@ -37,14 +38,14 @@ const UserAccountButton = () => {
             className="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all duration-200 bg-white"
             >
             <div className="w-10 h-10 bg-slate-400 rounded-xl flex items-center justify-center text-white font-semibold shadow-sm">
-              {user?.name?.charAt(0) || 'U'}
+              {isAuthenticated.user.name?.charAt(0) || 'U'}
             </div>
             <div className="flex-1 text-left">
               <div className="font-semibold text-slate-700" style={{ fontSize: '15px', fontWeight: '600' }}>
-                {user?.name || 'User'}
+                {isAuthenticated.user.name || 'User'}
               </div>
               <div className="text-sm text-slate-500" style={{ fontSize: '13px', fontWeight: '400' }}>
-                {user?.email || 'Not logged in'}
+                {isAuthenticated.user.email || 'Not logged in'}
               </div>
             </div>
             <Settings size={18} className="text-slate-400" />
@@ -75,11 +76,11 @@ const UserAccountButton = () => {
                     {isAuthenticated ? 'Authenticated' : 'Not Authenticated'}
                   </span>
                 </div>
-                {user && (
+                {isAuthenticated && (
                   <>
                     <div className="flex justify-between">
                       <span className="text-slate-600">User ID:</span>
-                      <span className="font-mono text-xs text-slate-700 align-middle">{user.user.id}...</span>
+                      <span className="font-mono text-xs text-slate-700 align-middle">{isAuthenticated.user.id.slice(0,10)}...</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-600">Provider:</span>

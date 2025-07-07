@@ -1,3 +1,5 @@
+// src/lib/auth.ts
+
 import { betterAuth } from "better-auth";
 import Database from "better-sqlite3";
 
@@ -10,3 +12,14 @@ export const auth = betterAuth({
         enabled: true,
     },
 });
+
+export interface PlatformCredential {
+    id: string;
+    userId: string;
+    platform: 'bluesky' | 'twitter' | 'threads' | 'linkedin' | 'notes';
+    credentials: string; // JSON string of encrypted credentials
+    isActive: boolean;
+    connectedAt: Date;
+    lastUsedAt?: Date;
+    metadata?: string; // JSON string for platform-specific data
+}

@@ -4,7 +4,7 @@ import { auth } from '../src/lib/auth.js';
 
 export const config = {
     api: {
-        bodyParser: true, // Change this to true!
+        bodyParser: true,
     },
 };
 

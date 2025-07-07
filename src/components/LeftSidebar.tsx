@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react';
 import UserAccountButton from './UserAccountButton';
 import PlatformCard from './PlatformCard'; 
 import { authClient } from '../lib/authClient';
+import { cn } from '../lib/utils';
 
 
 interface LeftSidebarProps {
@@ -23,9 +24,14 @@ const LeftSidebar = ({ addedPlatforms, onAddAccountClick, onTogglePlatform, onCo
         <div className="p-6 pb-4">
           <button
             onClick={onAddAccountClick}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all duration-200 font-medium shadow-sm"
-            disabled={!isAuthenticated}
-            >
+            className={cn(
+              'w-full flex items-center justify-center gap-3 px-4 py-3  rounded-xl hover:bg-slate-800 transition-all duration-200 font-medium shadow-sm',
+              isAuthenticated
+              ? 'bg-slate-900 text-white'
+              : 'bg-slate-500 text-white'
+            )}
+              disabled={!isAuthenticated}
+              >
             <Plus size={18} />
             Add Account
           </button>

@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo,  } from 'react';
 import { type Platforms, PLATFORM_CONFIGS } from '../types';
 import { BlueSkyService } from '../services/bluesky';
-import { BlueSkyStorageService } from '../services/storage';
 import { BlueSkyCredentials } from '../types';
 import { TwitterService } from '../services/twitter';
-import { useAuth0 } from '@auth0/auth0-react';
+import { authClient } from '../lib/authClient';
 
 import { getPlatformsAdded, getPlatformSelections, savePlatformAdditions, savePlatformSelections } from '../services/storage';
 
@@ -78,6 +77,7 @@ const getInitialState = (): Platforms => {
 
 
 export function usePlatformConnections(): UsePlatformConnectionsReturn {
+    const { data: isAuthenticated, isPending } = authClient.useSession();
 
      // Does init on first load (due to useState doing a function approach) to get saved selections from storage
     const [platforms, setPlatforms] = useState<Platforms>(getInitialState);
@@ -91,17 +91,13 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
     const [twitterService] = useState(() => new TwitterService());
 
 
-
-    const { logout, isLoading: isAuth0Loading } = useAuth0();
-
-
     // This map links a platform ID to the function that starts its connection process.
     const platformConnectActions = useMemo(() => ({
         bluesky: () => {
             setActiveModal('blueSkyLogin');
         },
         twitter: () => {
-        // For Twitter, "connecting" means starting the OAuth redirect flow.
+        // For Twitter, "connecting" means starting the PKCE redirect flow.
         twitterService.login();
         },
 
@@ -121,8 +117,8 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
     // --- MOUNTING AUTH ---
     useEffect(() => {
 
-        if (isAuth0Loading) {
-            return; // Exit early if Auth0 is still working.
+        if (isPending) {
+            return; // Exit early if auth is still working.
         }
 
         const handleInitConnect = (platformId: string, isConnected: boolean) => {
@@ -135,14 +131,13 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
             }));
         }
         const initConnections = async () => {
-        
+            setIsAppLoading(true);
+            
             // BLUESKY
             if (platforms.bluesky.isAdded) {
-                const storedBlueSky = BlueSkyStorageService.getBlueSkyCredentials();
-                if (storedBlueSky) {
-                    const success = await blueSkyService.login(storedBlueSky);
-                    handleInitConnect('bluesky', success)
-                }
+                // getStatus method calls our backend
+                const { isConnected } = await blueSkyService.getStatus();
+                handleInitConnect('bluesky', isConnected);
             }
 
             // TWITTER
@@ -156,7 +151,7 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
         };
         initConnections();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isAuth0Loading, blueSkyService, twitterService]);
+    }, [blueSkyService, twitterService]);
 
 
     // SAVE ADDED PLATFORMS
@@ -213,15 +208,14 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
     
     const handleBlueSkyLogin = async (credentials: BlueSkyCredentials) => {
         setIsAppLoading(true);
+
         const success = await blueSkyService.login(credentials);
-        if (success) {
-            BlueSkyStorageService.saveBlueSkyCredentials(credentials);    
-        }
-            // NOW we update the state, because we know it succeeded.
+        
         setPlatforms(prev => ({
             ...prev,
             bluesky: { ...prev.bluesky, isConnected: success, isSelected: success }
         }));
+
         setActiveModal('none');
         setIsAppLoading(false);
         return success;

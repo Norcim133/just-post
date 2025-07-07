@@ -1,95 +1,64 @@
 import { BlueSkyCredentials, PostResult } from '../types';
-import { BlueSkyStorageService } from './storage';
 
-const BLUESKY_API_BASE = 'https://bsky.social/xrpc';
+const API_BASE_URL = '/api/bluesky';
 
 export class BlueSkyService {
-  private accessJwt: string | null = null;
-  private did: string | null = null;
-
-  logout(): void {
-    this.accessJwt = null;
-    this.did = null;
-    BlueSkyStorageService.removeBlueSkyCredentials();
-  }
 
   async login(credentials: BlueSkyCredentials): Promise<boolean> {
     try {
-      const response = await fetch(`${BLUESKY_API_BASE}/com.atproto.server.createSession`, {
+      const response = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          identifier: credentials.identifier,
-          password: credentials.password,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
       });
-
-      if (!response.ok) {
-        throw new Error(`Login failed: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      this.accessJwt = data.accessJwt;
-      this.did = data.did;
-      
-      return true;
+      return response.ok;
     } catch (error) {
-      console.error('BlueSky login error:', error);
+      console.error('BlueSky login via backend error:', error);
       return false;
     }
   }
-
+  
   async createPost(text: string): Promise<PostResult> {
-    if (!this.accessJwt || !this.did) {
-      return {
-        platform: 'bluesky',
-        success: false,
-        error: 'Not authenticated',
-      };
-    }
-
     try {
-      const response = await fetch(`${BLUESKY_API_BASE}/com.atproto.repo.createRecord`, {
+      const response = await fetch(`${API_BASE_URL}/post`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.accessJwt}`,
-        },
-        body: JSON.stringify({
-          repo: this.did,
-          collection: 'app.bsky.feed.post',
-          record: {
-            text,
-            $type: 'app.bsky.feed.post',
-            createdAt: new Date().toISOString(),
-          },
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Post failed: ${response.statusText}`);
-      }
-
       const data = await response.json();
+
+      if (!response.ok) {
+        return { platform: 'bluesky', success: false, error: data.error || 'Post failed' };
+      }
       
-      return {
-        platform: 'bluesky',
-        success: true,
-        postId: data.uri,
-      };
+      // now returns a fully-formed PostResult object
+      return data;
+
     } catch (error) {
-      console.error('BlueSky post error:', error);
+      console.error('BlueSky post via backend error:', error);
       return {
         platform: 'bluesky',
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown network error',
       };
     }
   }
 
-  isAuthenticated(): boolean {
-    return !!(this.accessJwt && this.did);
+  async getStatus(): Promise<{ isConnected: boolean }> {
+      try {
+          const response = await fetch(`${API_BASE_URL}/status`);
+          if (!response.ok) {
+              return { isConnected: false };
+          }
+          const data = await response.json();
+          return { isConnected: data.isConnected };
+      } catch (error) {
+          console.error("Failed to fetch BlueSky connection status:", error);
+          return { isConnected: false };
+      }
   }
+
+  // Logout is now optional, but good practice. It would tell the backend to delete the KV key.
+  // For now, we can omit it to keep things simple. The user can just "disconnect" locally.
 }
