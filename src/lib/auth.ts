@@ -10,7 +10,7 @@ const pool = new Pool({
 // This is the core server-side instance of Better Auth.
 export const auth = betterAuth({
     database: pool,
-    baseURL: "http://localhost:3000",
+    baseURL: process.env.BETTER_AUTH_URL,
     // Enable the email and password authenticator
     emailAndPassword: {
         enabled: true,

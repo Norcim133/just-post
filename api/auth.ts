@@ -15,10 +15,7 @@ export default async function handler(req: any, res: any) {
         const host = req.headers.host || 'localhost:3000';
         const protocol = 'http';
         const url = `${protocol}://${host}${req.url}`;
-        
-        console.log('Request:', req.method, url);
-        console.log('Vercel body:', req.body);
-        
+                
         // For Vercel, the body is already parsed
         let body = undefined;
         if (req.body && req.method !== 'GET' && req.method !== 'HEAD') {
