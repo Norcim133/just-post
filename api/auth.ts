@@ -1,6 +1,7 @@
 // api/auth.ts
 
 import { auth } from '../src/lib/auth.js';
+import { getHeadersFromVercelReq } from '../src/lib/request-helper.js';
 
 export const config = {
     api: {
@@ -25,12 +26,7 @@ export default async function handler(req: any, res: any) {
         }
         
         // Create headers object
-        const headers = new Headers();
-        for (const [key, value] of Object.entries(req.headers)) {
-            if (value) {
-                headers.set(key, String(value));
-            }
-        }
+        const headers = getHeadersFromVercelReq(req);
         
         // Create a standard Request
         const request = new Request(url, {

@@ -1,4 +1,4 @@
-import type { BlueSkyCredentials } from '../../src/types/index.js';
+import type { BlueSkyCredentials } from '../../types/index.js';
 
 const BLUESKY_API_BASE = 'https://bsky.social/xrpc';
 

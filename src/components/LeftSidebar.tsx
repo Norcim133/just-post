@@ -2,7 +2,7 @@ import { PlatformState } from '../types';
 import { Plus } from 'lucide-react';
 import UserAccountButton from './UserAccountButton';
 import PlatformCard from './PlatformCard'; 
-import { authClient } from '../lib/authClient';
+import { authClient } from '../clients/authClient';
 import { cn } from '../lib/utils';
 
 

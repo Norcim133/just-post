@@ -2,7 +2,7 @@
 
 import SocialPostingInterface from './components/SocialPostingInterface';
 import { LoginPage } from './pages/LoginPage';
-import { authClient } from './lib/authClient';
+import { authClient } from './clients/authClient';
 
 function App() {
   // Use Better Auth's hook to get the session

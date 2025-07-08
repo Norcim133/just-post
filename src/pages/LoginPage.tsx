@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { authClient } from '../lib/authClient';
+import { authClient } from '../clients/authClient';
 
 export const LoginPage = (): JSX.Element => {
     const [email, setEmail] = useState('');

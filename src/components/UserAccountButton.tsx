@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Settings } from 'lucide-react';
-import { authClient } from '../lib/authClient';
+import { authClient } from '../clients/authClient';
 
 
 

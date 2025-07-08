@@ -1,8 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { kv } from '@vercel/kv';
-import { getSessionOrUnauthorized } from '../lib/request-helper.js';
-import { loginToBlueSky } from '../lib/bluesky-helpers.js';
-import type { BlueSkyCredentials } from '../../src/types/index.js';
+import { getSessionOrUnauthorized } from '../../src/lib/request-helper.js';
+import { loginToBlueSky } from '../../src/lib/platforms/bluesky.js';
+import { getCredentials } from '../../src/lib/db.js';
 
 const BLUESKY_API_BASE = 'https://bsky.social/xrpc';
 
@@ -16,9 +15,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!text) return res.status(400).json({ error: 'Missing post text' });
 
     try {
-        // 1. Get stored credentials for the user.
-        const userKey = `bluesky_credentials:${session.user.id}`;
-        const credentials = await kv.get<BlueSkyCredentials>(userKey);
+        const credentials = await getCredentials('bluesky', session.user.id)
         if (!credentials) return res.status(403).json({ error: 'BlueSky credentials not found.' });
 
         // 2. Use the helper to get a fresh login session from BlueSky.
@@ -49,8 +46,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const blueSkyResult = await response.json();
 
-        // --- THIS IS THE FIX ---
-        // Instead of returning the raw result, create the object our UI expects.
         const successResult = {
             platform: 'bluesky',
             success: true,

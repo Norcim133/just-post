@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo,  } from 'react';
 import { type Platforms, PLATFORM_CONFIGS } from '../types';
-import { BlueSkyService } from '../services/bluesky';
+import { BlueSkyService } from '../clients/bluesky';
 import { BlueSkyCredentials } from '../types';
-import { TwitterService } from '../services/twitter';
-import { authClient } from '../lib/authClient';
+import { TwitterService } from '../clients/twitter';
+import { authClient } from '../clients/authClient';
 
-import { getPlatformsAdded, getPlatformSelections, savePlatformAdditions, savePlatformSelections } from '../services/storage';
+import { getPlatformsAdded, getPlatformSelections, savePlatformAdditions, savePlatformSelections } from '../clients/storage';
 
 export interface UsePlatformConnectionsReturn {
   platforms: Platforms;
