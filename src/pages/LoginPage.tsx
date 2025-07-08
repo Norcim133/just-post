@@ -12,7 +12,7 @@ export const LoginPage = (): JSX.Element => {
         setError(null);
         setIsSubmitting(true);
 
-        const { data, error } = await authClient.signIn.email({
+        const { error } = await authClient.signIn.email({
             email,
             password,
             callbackURL: "/"
@@ -20,7 +20,8 @@ export const LoginPage = (): JSX.Element => {
             onSuccess: () => { window.location.href = '/'; }
         });
 
-        if (error) { setError(error.message); }
+        if (error && error.message)
+            { setError(error.message); }
         setIsSubmitting(false);
     };
     
@@ -28,7 +29,7 @@ export const LoginPage = (): JSX.Element => {
         e.preventDefault();
         setError(null);
         setIsSubmitting(true);
-        const { data, error } = await authClient.signUp.email({
+        const { error } = await authClient.signUp.email({
             email,
             password,
             name: email,
@@ -40,6 +41,7 @@ export const LoginPage = (): JSX.Element => {
             },
             onError: (ctx) => {
                 alert(ctx.error.message);
+                console.log(error)
                 setIsSubmitting(true);
             }
 

@@ -1,3 +1,3 @@
 export default function handler(req: any, res: any) {
-  res.status(200).json({ message: 'API route works!' });
+  res.status(200).json({ message: `API route works: ${req}` });
 }

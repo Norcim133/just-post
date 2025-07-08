@@ -77,7 +77,7 @@ const getInitialState = (): Platforms => {
 
 
 export function usePlatformConnections(): UsePlatformConnectionsReturn {
-    const { data: isAuthenticated, isPending } = authClient.useSession();
+    const { isPending } = authClient.useSession();
 
      // Does init on first load (due to useState doing a function approach) to get saved selections from storage
     const [platforms, setPlatforms] = useState<Platforms>(getInitialState);
