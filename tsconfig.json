@@ -7,7 +7,6 @@
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
 
-    /* --- This is the corrected, stable configuration --- */
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -26,5 +25,9 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "api"]
+  "include": ["src", "api"],
+  "exclude": [
+    "api/twitter/login.ts",
+    "src/lib/platforms/twitter.ts"
+  ]
 }

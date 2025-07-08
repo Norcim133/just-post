@@ -4,6 +4,7 @@ import SocialPostingInterface from './components/SocialPostingInterface';
 import { LoginPage } from './pages/LoginPage';
 import { authClient } from './clients/authClient';
 
+//TOOD: If an app fails to post, do we clear the post area?
 //TODO: Make it so in invalid connect during post, platform becomes logged out
 //TODO: Don't let long email squish initial icon
 //TODO: Consider visual signal for posts that worked vs. didn't

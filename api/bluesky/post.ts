@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSessionOrUnauthorized } from '../../src/lib/request-helper.js';
 import { loginToBlueSky } from '../../src/lib/platforms/bluesky.js';
-import { getCredentials } from '../../src/lib/db.js';
+import { getValue } from '../../src/lib/db.js';
+import { BlueSkyCredentials } from '../../src/types/index';
 
 const BLUESKY_API_BASE = 'https://bsky.social/xrpc';
 
@@ -15,7 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!text) return res.status(400).json({ error: 'Missing post text' });
 
     try {
-        const credentials = await getCredentials('bluesky', session.user.id)
+        const credentials: BlueSkyCredentials = await getValue('bluesky', session.user.id)
         if (!credentials) return res.status(403).json({ error: 'BlueSky credentials not found.' });
 
         // 2. Use the helper to get a fresh login session from BlueSky.

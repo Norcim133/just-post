@@ -59,6 +59,5 @@ export class BlueSkyService {
       }
   }
 
-  // Logout is now optional, but good practice. It would tell the backend to delete the KV key.
-  // For now, we can omit it to keep things simple. The user can just "disconnect" locally.
+  // Consider logout
 }

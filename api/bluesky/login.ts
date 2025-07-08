@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSessionOrUnauthorized } from '../../src/lib/request-helper.js';
 import { loginToBlueSky } from '../../src/lib/platforms/bluesky.js';
-import { storeCredentials } from '../../src/lib/db.js';
+import { setValue } from '../../src/lib/db.js';
+import { BlueSkyCredentials } from '../../src/types/index';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
@@ -15,12 +16,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(400).json({ error: 'Missing BlueSky identifier or password' });
         }
 
-        const plainTextCredentials = { identifier, password }
+        const credentials: BlueSkyCredentials = { identifier, password }
 
-        await loginToBlueSky(plainTextCredentials);
+        await loginToBlueSky(credentials);
 
 
-        const db_response = await storeCredentials('bluesky', session.user.id, plainTextCredentials)
+        const db_response = await setValue('bluesky', session.user.id, credentials)
 
         if (!db_response) {
             return res.status(400).json({error: "Error saving credentials to db"})
