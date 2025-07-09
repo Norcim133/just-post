@@ -1,6 +1,6 @@
 import { Check, Power } from 'lucide-react';
-import { PlatformState } from '../types';
-import { cn } from '../lib/utils'; 
+import { PlatformState } from '../../types';
+import { cn } from '../../lib/utils'; 
 
 interface PlatformCardProps {
   platform: PlatformState;
@@ -70,7 +70,7 @@ const PlatformCard = ({ platform, onToggleSelect, onConnect }: PlatformCardProps
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onConnect(id); // Use the new onConnect prop
+            onConnect(id); 
           }}
           className="flex-shrink-0 flex items-center gap-2 text-sm font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
           aria-label={`Connect ${name}`}

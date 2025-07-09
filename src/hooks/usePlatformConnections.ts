@@ -96,9 +96,16 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
         bluesky: () => {
             setActiveModal('blueSkyLogin');
         },
-        twitter: () => {
+        twitter: async () => {
         // For Twitter, "connecting" means starting the PKCE redirect flow.
-        twitterService.login();
+            const url = await twitterService.getLoginUrl();
+            if (url) {
+                window.location.href = url;
+            } else {
+                // Handle the error gracefully, e.g., show an alert
+                alert("Could not connect to Twitter at this time. Please try again later.");
+            }
+
         },
 
         // linkedin: () => { linkedinService.login(); }

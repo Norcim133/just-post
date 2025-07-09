@@ -1,6 +1,6 @@
 import  { useState } from 'react';
 import { X } from 'lucide-react';
-import { BlueSkyCredentials } from '../types';
+import { BlueSkyCredentials } from '../../types';
 
 interface LoginModalProps {
   isOpen: boolean;

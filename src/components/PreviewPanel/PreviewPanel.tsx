@@ -1,4 +1,4 @@
-import { PlatformState } from '../types'
+import { PlatformState } from '../../types'
 import PlatformPreview from './PostPreview';
 
 interface PreviewPanelProps {

@@ -26,8 +26,5 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src", "api"],
-  "exclude": [
-    "api/twitter/login.ts",
-    "src/lib/platforms/twitter.ts"
-  ]
+  "exclude": []
 }

@@ -1,5 +1,5 @@
 import { X, ChevronRight } from 'lucide-react';
-import { PlatformState } from '../types'
+import { PlatformState } from '../../types'
 
 
 interface AddPlatformModalProps {

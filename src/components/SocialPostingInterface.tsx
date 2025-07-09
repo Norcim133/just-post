@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import LeftSidebar from './LeftSidebar';
-import LoginModal from './LoginModal';
-import AddPlatformModal from './AddPlatformModal'
-import PreviewPanel from './PreviewPanel'
-import PostingArea from './PostingArea';
+import LeftSidebar from './LeftSidebar/LeftSidebar';
+import LoginModal from './CentralPostingArea/LoginModal';
+import AddPlatformModal from './CentralPostingArea/AddPlatformModal'
+import PreviewPanel from './PreviewPanel/PreviewPanel'
+import PostingArea from './CentralPostingArea/PostingArea';
 import { usePlatformConnections } from '../hooks/usePlatformConnections'; 
 import { PostResult } from '../types';
 

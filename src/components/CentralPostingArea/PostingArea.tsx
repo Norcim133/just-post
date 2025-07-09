@@ -1,4 +1,4 @@
-import { PlatformState } from '../types'
+import { PlatformState } from '../../types'
 import { Send, Check } from 'lucide-react';
 
 interface PostingAreaProps {

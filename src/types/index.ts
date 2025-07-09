@@ -3,6 +3,11 @@ export interface BlueSkyCredentials {
   password: string; // app-specific password
 }
 
+export interface TwitterAuthCodes {
+    codeVerifier: string;
+    stateToken: string;
+}
+
 export interface TwitterSessionCredentials {
   verifierCode: string | null;
   challengeCode: string | null;

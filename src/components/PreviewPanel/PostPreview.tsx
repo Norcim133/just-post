@@ -1,7 +1,7 @@
 
-import { PlatformConfig } from '../types';
-import { cn } from '../lib/utils';
-import { authClient } from '../clients/authClient';
+import { PlatformConfig } from '../../types';
+import { cn } from '../../lib/utils';
+import { authClient } from '../../clients/authClient';
 
 const PlatformPreview = ({ text, platformConfig }: { text: string, platformConfig: PlatformConfig }) => {
     const LIMIT = platformConfig.charLimit;
