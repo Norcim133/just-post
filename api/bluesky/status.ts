@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSessionOrUnauthorized } from '../../src/lib/request-helper.js';
 import { getValue } from '../../src/lib/db.js';
-import { BlueSkyCredentials } from '../../src/types/index.js';
+import { BlueSkyCredentials, DB_KEYS } from '../../src/types/index.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'GET') {
@@ -12,7 +12,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!session) return;
 
     try {
-        const credentials: BlueSkyCredentials | null = await getValue('bluesky', session.user.id)
+        const credentials: BlueSkyCredentials | null = await getValue(DB_KEYS.BLUESKY_CREDENTIALS, session.user.id)
         if (!credentials) return res.status(403).json({ error: 'BlueSky credentials not found.' });
         
         return res.status(200).json({ isConnected: !!credentials });

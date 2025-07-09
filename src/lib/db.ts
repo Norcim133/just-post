@@ -91,3 +91,18 @@ export async function setValueEx<T>(prefix: string, userId: string, value: T, tt
         return false;
     }
 }
+
+/**
+ * Deletes a key from Vercel KV.
+ * @returns True if successful, false on error.
+ */
+export async function deleteValue(prefix: string, userId: string): Promise<boolean> {
+    try {
+        const key = `${prefix}:${userId}`;
+        await kv.del(key);
+        return true;
+    } catch (error: any) {
+        console.error(`Issue deleting value for key [${prefix}:${userId}]:`, error);
+        return false;
+    }
+}

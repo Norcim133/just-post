@@ -8,15 +8,27 @@ export interface TwitterAuthCodes {
     stateToken: string;
 }
 
-export interface TwitterSessionCredentials {
-  verifierCode: string | null;
-  challengeCode: string | null;
-  stateToken: string | null;
-}
-
-export interface TwitterLocalCredentials {
+export interface TwitterTokens {
   accessToken: string | null;
   refreshToken: string | null;
+  expiresAt: number | null;
+}
+
+export interface TwitterTokenResponse {
+   access_token: string;
+    token_type: string;
+    expires_in: number;
+    refresh_token: string;
+    scope: string;
+}
+
+export const DB_KEYS = {
+    // Prefixes for BlueSky
+    BLUESKY_CREDENTIALS: 'bluesky',
+
+    // Prefixes for Twitter
+    TWITTER_PKCE: 'twitter_pkce',
+    TWITTER_TOKENS: 'twitter_tokens',
 }
 
 
@@ -52,6 +64,8 @@ export interface PlatformState {
 export interface Platforms {
   [key: string]: PlatformState
 }
+
+
 
 export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
   bluesky:{

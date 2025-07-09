@@ -75,7 +75,6 @@ const getInitialState = (): Platforms => {
 }
 
 
-
 export function usePlatformConnections(): UsePlatformConnectionsReturn {
     const { isPending } = authClient.useSession();
 
@@ -137,6 +136,7 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
                 }
             }));
         }
+
         const initConnections = async () => {
             setIsAppLoading(true);
             
@@ -149,16 +149,15 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
 
             // TWITTER
             if (platforms.twitter.isAdded) {
-                // The service constructor already loaded tokens from localStorage.
-                // We just need to check if it's considered authenticated. No redirect needed.
-                handleInitConnect('twitter', twitterService.isAuthenticated());
+                const { isConnected } = await twitterService.getStatus();
+                handleInitConnect('twitter', isConnected);
             }
 
             setIsAppLoading(false);
         };
         initConnections();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [blueSkyService, twitterService]);
+    }, [isPending, blueSkyService, twitterService]);
 
 
     // SAVE ADDED PLATFORMS
@@ -227,60 +226,6 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
         setIsAppLoading(false);
         return success;
     };
-
-    useEffect(() => {
-        const processCallback = async (platform: string, code: string, state: string) => {
-            setIsAppLoading(true);
-            let success = false;
-
-            // --- ROUTER LOGIC ---
-            // Delegate to the correct service based on the platform from the state token
-            if (platform === 'twitter') {
-                success = await twitterService.handleCallback(code, state);
-                setPlatforms(prev => ({
-                    ...prev,
-                    twitter: {
-                        ...prev.twitter,
-                        isConnected: success,
-                        isAdded: true,
-                        isSelected: success,
-                    },
-                }));
-            } 
-            // else if (platform === 'linkedin') {
-            //   success = await linkedInService.handleCallback(code, state);
-            //   setPlatforms(...)
-            // }
-
-            setIsAppLoading(false);
-        };
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const state = urlParams.get('state');
-        const prefix = 'justpost-';
-
-        if (code && state && state.startsWith(prefix)) {
-            // Clean the URL immediately to prevent re-runs
-            window.history.replaceState({}, document.title, window.location.pathname);
-            
-            try {
-                // Decode the state token to find out which platform it is
-                const encodedJson = state.substring(prefix.length);
-                const decodedState = JSON.parse(atob(encodedJson));
-                const platform = decodedState.platform;
-
-                if (platform) {
-                    // We have a valid platform, proceed with processing
-                    processCallback(platform, code, state);
-                } else {
-                    console.error("Callback received, but state token is missing 'platform' property.");
-                }
-            } catch (error) {
-                console.error("Failed to parse state token from callback URL.", error);
-            }
-        }
-    }, [twitterService]);
 
     return {
         platforms,

@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSessionOrUnauthorized } from '../../src/lib/request-helper.js';
 import { loginToBlueSky } from '../../src/lib/platforms/bluesky.js';
 import { setValue } from '../../src/lib/db.js';
-import { BlueSkyCredentials } from '../../src/types/index';
+import { BlueSkyCredentials, DB_KEYS } from '../../src/types/index';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
@@ -21,7 +21,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await loginToBlueSky(credentials);
 
 
-        const db_response = await setValue('bluesky', session.user.id, credentials)
+        const db_response = await setValue(DB_KEYS.BLUESKY_CREDENTIALS, session.user.id, credentials)
 
         if (!db_response) {
             return res.status(400).json({error: "Error saving credentials to db"})

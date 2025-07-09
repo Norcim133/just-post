@@ -1,8 +1,15 @@
 // src/lib/platforms/twitter.ts
 
-import { TwitterAuthCodes } from '../../types/index.js';
-import { setValueEx } from '../db.js'
 import { randomBytes, createHash } from 'crypto';
+import { getValue, setValue, deleteValue, setValueEx } from '../db.js';
+import { DB_KEYS } from '../../types/index.js';
+import type { TwitterTokens, TwitterTokenResponse, TwitterAuthCodes, PostResult } from '../../types/index.js';
+
+// Get these from env once at the top level
+const CLIENT_ID = process.env.TWITTER_CLIENT_ID;
+const CLIENT_SECRET = process.env.TWITTER_CLIENT_SECRET;
+const basicAuth = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
+
 
 async function _generateCodeVerifier(): Promise<string | null> {
     try{
@@ -54,16 +61,6 @@ function _generateStateToken(): string {
 }
 
 export async function startLoginProcess(userId: string): Promise<string | null> {
-    /**
-    * Params required for confidential client Twitter auth request
-    * response_type = code
-    * client_id
-    * redirect_uri
-    * scope
-    * state
-    * code_challenge
-    * code_challenge_method 
-    */
 
     try {
         const clientId = process.env.TWITTER_CLIENT_ID
@@ -102,11 +99,11 @@ export async function startLoginProcess(userId: string): Promise<string | null> 
         }
 
         // Temp save credentials
-        const prefix = 'twitter_pkce';
+        const prefix = DB_KEYS.TWITTER_PKCE;
         const pkceData: TwitterAuthCodes = { codeVerifier, stateToken };
         const ttlInSeconds = 600; // 10 minutes;
 
-        const dbSuccess = setValueEx(prefix, userId, pkceData, ttlInSeconds);
+        const dbSuccess = await setValueEx(prefix, userId, pkceData, ttlInSeconds);
 
         if (!dbSuccess) {
             console.error('Error saving Twitter auth codes to db')
@@ -126,250 +123,158 @@ export async function startLoginProcess(userId: string): Promise<string | null> 
         const authUrl = `https://x.com/i/oauth2/authorize?${params.toString()}`;
 
         return authUrl
-        
+
     } catch (error: any) {
         console.error('Unable to create Twitter authUrl')
         return null
     }
 }
 
-// const API_BASE_URL = process.env.VITE_API_BASE_URL;
 
-//interface TokenResponse {
-//    access_token: string;
-//     token_type: string;
-//     expires_in: number;
-//     refresh_token: string;
-//     scope: string;
-// };
-// 
-// import { PostResult, TwitterAuthCodes } from '../../types/index.js';
-// export class TwitterService {
-//     private clientID: string | null = process.env.TWITTER_CLIENT_ID
-//     private callbackURI: string | null = process.env.VITE_TWITTER_CALLBACK_URI
-//     private accessToken: string | null = null;
-//     private refreshToken: string | null = null;
+async function _refreshAccessToken(userId: string, refreshToken: string): Promise<TwitterTokens | null> {
+    const params = new URLSearchParams({
+        refresh_token: refreshToken,
+        grant_type: 'refresh_token',
+    });
 
-//     constructor() {
-//         // Get existing credentials if they exist
+    const response = await fetch('https://api.x.com/2/oauth2/token', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Basic ${basicAuth}`, // This was missing
+        },
+        body: params.toString(),
+    });
 
-//         const twitterCredentials = TwitterStorageService.getTwitterLocalCredentials();
-//         if (twitterCredentials) {
-//             this.accessToken = twitterCredentials.accessToken;
-//             this.refreshToken = twitterCredentials.refreshToken;
-//         }
-//     }
+    if (!response.ok) {
+        console.error("Twitter token refresh failed. Deleting invalid tokens.");
+        // If refresh fails, the tokens are bad. Delete them
+        await deleteValue(DB_KEYS.TWITTER_TOKENS, userId);
+        return null;
+    }
 
-//     _logout(): void {
-//       this.accessToken = null;
-//       this.refreshToken = null;
-//       TwitterStorageService.removeTwitterLocalCredentials();
-//     }
+    const tokenData: TwitterTokenResponse = await response.json();
+    const newTokens: TwitterTokens = {
+        accessToken: tokenData.access_token,
+        refreshToken: tokenData.refresh_token,
+        expiresAt: Date.now() + (tokenData.expires_in * 1000),
+    };
 
-//     // In services/twitter.ts
+    // Save the shiny new tokens
+    await setValue(DB_KEYS.TWITTER_TOKENS, userId, newTokens);
+    return newTokens;
+}
 
-//     async logout(): Promise<void> {
-//         // First, try to revoke the tokens on Twitter's end.
-//         if (this.accessToken) {
-//             try {
-//                 const revokeEndpoint = `${API_BASE_URL}api/twitter-revoke-token`;
-//                 await fetch(revokeEndpoint, {
-//                     method: 'POST',
-//                     headers: { 'Content-Type': 'application/json' },
-//                     body: JSON.stringify({
-//                         token: this.accessToken,
-//                         token_type_hint: 'access_token'
-//                     })
-//                 });
-//                 // We can also try to revoke the refresh token if it exists
-//                 if (this.refreshToken) {
-//                     await fetch(revokeEndpoint, {
-//                         method: 'POST',
-//                         headers: { 'Content-Type': 'application/json' },
-//                         body: JSON.stringify({
-//                             token: this.refreshToken,
-//                             token_type_hint: 'refresh_token'
-//                         })
-//                     });
-//                 }
-//             } catch (error) {
-//                 // We log the error but don't stop the local logout process.
-//                 console.error("Failed to revoke token, but proceeding with local logout.", error);
-//             }
-//         }
+/**
+ * Verifies that the user's Twitter tokens are still valid.
+ * If the access token is expired, it attempts to refresh it.
+ * @returns True if the user has valid, active tokens, otherwise false.
+ */
+export async function verifyTwitterAuthentication(userId: string): Promise<boolean> {
+    const tokens = await getValue<TwitterTokens>(DB_KEYS.TWITTER_TOKENS, userId);
 
-//         // ALWAYS perform the local logout, regardless of revocation success.
-//         this.accessToken = null;
-//         this.refreshToken = null;
-//         TwitterStorageService.removeTwitterLocalCredentials();
-//         console.log("Local Twitter logout complete.");
-//     }
+    if (!tokens?.refreshToken) {
+        return false; // No tokens or no refresh token means not connected
+    }
 
+    // Quick check: if token is fresh, assume it's valid to save an API call
+    // 5 minutes = 300,000 milliseconds
+    if (tokens.expiresAt && Date.now() < tokens.expiresAt - 300000) {
+        return true;
+    }
 
-//     async createPost(text: string): Promise<PostResult> {
-        
-//         if (!this.accessToken) {
-//             return { platform: 'twitter', success: false, error: 'Not authenticated' };
-//         }
+    // If token is close to expiry, verify it with a lightweight API call
+    const response = await fetch('https://api.twitter.com/2/users/me', {
+        headers: { 'Authorization': `Bearer ${tokens.accessToken}` }
+    });
 
-//         // Use local API proxy in development, or Vercel function in production
-//         const tweetEndpoint = `${API_BASE_URL}api/twitter-tweet`
-        
-//         let response = await fetch(tweetEndpoint, {
-//             method: 'POST',
-//             headers: {
-//                 'Authorization': `Bearer ${this.accessToken}`,
-//                 'Content-Type': 'application/json',
-//             },
-//             body: JSON.stringify({text: text})
-//         });
+    if (response.ok) {
+        return true; // Token is still good.
+    }
 
-//         if (response.status === 401) {
-//             console.log("Token expired, attempting refresh...");
-//             const success = await this._refreshAccessToken();
+    if (response.status === 401) {
+        // Token is expired or revoked, try to refresh
+        console.log('Twitter access token expired, attempting refresh...');
+        const newTokens = await _refreshAccessToken(userId, tokens.refreshToken);
+        return !!newTokens; // Return true if refresh succeeded, false otherwise.
+    }
 
-//             if (success) {
-//                 // If refresh succeeded, retry the original request with the new token
-//                 console.log("Retrying post with new token.");
-//                 response = await fetch(tweetEndpoint, {
-//                     method: 'POST',
-//                     headers: { 'Authorization': `Bearer ${this.accessToken}`, 'Content-Type': 'application/json' },
-//                     body: JSON.stringify({ text })
-//                 });
-//             } else {
-//                 // If refresh failed, inform the user they need to log in again.
-//                 return { platform: 'twitter', success: false, error: 'Session has expired. Please log in again.' };
-//             }
-//         }
-        
-//         if (!response.ok) {
-//             const errorData = await response.json();
-//             return { platform: 'twitter', success: false, error: `Post failed: ${errorData.title} || 'Unknown error'}`}
-//         }
-        
-//         const data = await response.json();
-        
-//         return { platform: 'twitter', success: true, postId: data?.data?.id };        
+    // For any other errors (e.g., 403, 500), assume invalid
+    return false;
+}
 
-//     }
+ async function _revokeToken(token: string, token_type_hint: 'access_token' | 'refresh_token') {
+    const CLIENT_ID = process.env.TWITTER_CLIENT_ID;
+    const CLIENT_SECRET = process.env.TWITTER_CLIENT_SECRET;
+    const basicAuth = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
+    
+    try {
+        await fetch('https://api.twitter.com/2/oauth2/revoke', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': `Basic ${basicAuth}`,
+            },
+            body: new URLSearchParams({ token, token_type_hint }),
+        });
+        console.log(`Successfully revoked Twitter ${token_type_hint}.`);
+    } catch (error) {
+        // Log the error but don't stop the logout process.
+        console.warn(`Could not revoke Twitter ${token_type_hint}. This is non-critical.`, error);
+    }
+}
 
-//     isAuthenticated(): boolean {
-//         return !!(this.accessToken && this.refreshToken);
-//     }
+export async function postToTwitterForUser(userId: string, text: string): Promise<PostResult> {
+    try {
+        // 1. Verify tokens are valid and refresh them if necessary.
+        const isVerified = await verifyTwitterAuthentication(userId);
+        if (!isVerified) {
+            throw new Error("User is not authenticated with Twitter or tokens are invalid.");
+        }
 
-//     async handleCallback(code: string, state: string): Promise<boolean> {
-//         try {
-//             // Receiving authorization code 
-//             // Get stored session credentials
-//             const sessionCreds = TwitterStorageService.getTwitterSessionCredentials();
+        // 2. Get the (potentially refreshed) tokens from the database.
+        const tokens = await getValue<TwitterTokens>(DB_KEYS.TWITTER_TOKENS, userId);
+        if (!tokens?.accessToken) {
+            throw new Error("Could not retrieve valid access token after verification.");
+        }
 
-//             // If sessionCreds is both empty or new (doesn't match our stored state) we have a problem
-//             if (!sessionCreds || sessionCreds.stateToken !== state) {
-//                 console.error(`State mismatch. From URL: "${state}", From Storage: "${sessionCreds?.stateToken}"`);
-//                 throw new Error('Invalid state token'); // Checks for csrf attack; can also use for session storage for user
-//             }
+        // 3. Make the API call to create the tweet.
+        const response = await fetch('https://api.twitter.com/2/tweets', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${tokens.accessToken}`,
+                'Content-type': 'application/json',
+            },
+            body: JSON.stringify({ text }),
+        });
 
-//             if (!sessionCreds.verifierCode) {
-//                 throw new Error('Missing verifier code');
-//             }
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`Failed to post to Twitter: ${errorData.title || 'Unknown API error'}`);
+        }
 
-//             if (!this.clientID || !this.callbackURI) {
-//                 throw new Error('Missing client ID or callback URI');
-//             }
+        const data = await response.json();
+        return { platform: 'twitter', success: true, postId: data?.data?.id };
 
-//             // Exchange code for tokens
-//             const params = new URLSearchParams({
-//                 code: code,
-//                 grant_type: 'authorization_code',
-//                 redirect_uri: this.callbackURI,
-//                 code_verifier: sessionCreds.verifierCode
-//             });
+    } catch (error: any) {
+        console.error("Error in postToTwitterForUser service:", error);
+        return { platform: 'twitter', success: false, error: error.message };
+    }
+}
 
-//             // Use local API proxy in development, or Vercel function in production
-//             const tokenEndpoint = `${API_BASE_URL}api/twitter-token`
-            
-//             const response = await fetch(tokenEndpoint, {
-//                 method: 'POST',
-//                 headers: {
-//                     'Content-Type': 'application/x-www-form-urlencoded',
-//                 },
-//                 body: params.toString()
-//             });
+export async function logoutFromTwitterForUser(userId: string): Promise<boolean> {
+    const tokens = await getValue<TwitterTokens>(DB_KEYS.TWITTER_TOKENS, userId);
 
-//             if (!response.ok) {
-//                 const errorText = await response.text();
-//                 throw new Error(`Token exchange failed: ${response.status} - ${errorText}`);
-//             }
+    if (tokens && tokens.accessToken) {
+        // Best effort: try to revoke the tokens with Twitter's API first
+        // Do in parallel to speed it up
+        await Promise.all([
+            _revokeToken(tokens.accessToken, 'access_token'),
+            tokens.refreshToken ? _revokeToken(tokens.refreshToken, 'refresh_token') : Promise.resolve()
+        ]);
+    }
 
-//             const data: TokenResponse = await response.json();
-            
-//             // Store tokens
-//             this.accessToken = data.access_token;
-//             this.refreshToken = data.refresh_token;
-            
-//             const credentials: TwitterLocalCredentials = {
-//                 accessToken: data.access_token,
-//                 refreshToken: data.refresh_token || null
-//             };
-            
-//             TwitterStorageService.saveTwitterLocalCredentials(credentials);
-            
-//             // Clear session storage
-//             TwitterStorageService.clearTwitterSessionCredentials();
-            
-//             return true;
-//         } catch (error) {
-//             console.error('Twitter callback error:', error);
-//             return false;
-//         }
-//     }
-
-//     async _refreshAccessToken(): Promise<boolean> {
-//         if (!this.refreshToken) {
-//             console.error("Cannot refresh, no refresh token found.");
-//             return false;
-//         }
-
-//         const params = new URLSearchParams({
-//             refresh_token: this.refreshToken,
-//             grant_type: 'refresh_token',
-//         })
-
-//         const tokenEndpoint = `${API_BASE_URL}api/twitter-token`
-        
-//         try {
-
-//             const response = await fetch(tokenEndpoint, {
-//                 method: 'POST',
-//                 headers: {
-//                     'Content-Type': 'application/x-www-form-urlencoded',
-//                 },
-//                 body: params.toString()
-//             });
-            
-//             if (!response.ok) {
-//                 console.error("Token refresh failed, logging out.");
-//                 this.logout(); // Clear the bad tokens
-//                 return false;
-//             }
-            
-//             const data: TokenResponse = await response.json();
-            
-//             // Update the service's state with the new tokens
-//             this.accessToken = data.access_token;
-//             this.refreshToken = data.refresh_token;
-            
-//             TwitterStorageService.saveTwitterLocalCredentials({
-//                 accessToken: this.accessToken,
-//                 refreshToken: this.refreshToken,
-//             });
-//             console.log("Token refreshed successfully.");
-//             return true;
-//         } catch (error) {
-//             console.error("Error during token refresh: ", error)
-//             return false;
-//         }
-
-
-//     }
-// }
+    // Always delete the tokens from our database, regardless of revocation success
+    const deleted = await deleteValue(DB_KEYS.TWITTER_TOKENS, userId);
+    return deleted;
+}
