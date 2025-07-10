@@ -17,7 +17,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      // This maps the '@' alias to your 'src' directory for frontend code
+      // This maps the '@' alias to 'src' directory for frontend code
       '@': path.resolve(__dirname, './src'),
     },
     extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json']
