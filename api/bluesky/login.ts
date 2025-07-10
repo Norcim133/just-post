@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSessionOrUnauthorized } from '../../src/lib/request-helper.js';
 import { loginToBlueSky } from '../../src/lib/platforms/bluesky.js';
 import { setValue } from '../../src/lib/db.js';
-import { BlueSkyCredentials, DB_KEYS } from '../../src/types/index';
+import { BlueSkyCredentials, DB_KEYS } from '../../src/types/index.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });

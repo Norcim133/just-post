@@ -21,7 +21,8 @@ const SocialPostingInterface = () => {
         handleAddPlatform,
         handleBlueSkyLogin,
         blueSkyService,
-        twitterService
+        twitterService,
+        linkedInService
     } = usePlatformConnections();
 
 
@@ -43,7 +44,7 @@ const SocialPostingInterface = () => {
     const services: { [key: string]: { createPost: (text: string) => Promise<PostResult> } } = {
         bluesky: blueSkyService,
         twitter: twitterService,
-        // Map other services here
+        linkedin: linkedInService,
     };
 
     const postPromises = selectedPlatforms

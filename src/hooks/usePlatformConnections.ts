@@ -3,6 +3,7 @@ import { type Platforms, PLATFORM_CONFIGS } from '../types';
 import { BlueSkyService } from '../clients/bluesky';
 import { BlueSkyCredentials } from '../types';
 import { TwitterService } from '../clients/twitter';
+import { LinkedInService } from '../clients/linkedin'
 import { authClient } from '../clients/authClient';
 
 import { getPlatformsAdded, getPlatformSelections, savePlatformAdditions, savePlatformSelections } from '../clients/storage';
@@ -19,6 +20,7 @@ export interface UsePlatformConnectionsReturn {
   setActiveModal: React.Dispatch<React.SetStateAction<'none' | 'addPlatform' | 'blueSkyLogin' | 'twitterLoginHelp'>>;
   blueSkyService: BlueSkyService;
   twitterService: TwitterService;
+  linkedInService: LinkedInService;
 }
 
 const getInitialState = (): Platforms => {
@@ -74,7 +76,6 @@ const getInitialState = (): Platforms => {
     }
 }
 
-
 export function usePlatformConnections(): UsePlatformConnectionsReturn {
     const { isPending } = authClient.useSession();
 
@@ -88,6 +89,7 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
     // --- SERVICES ---
     const [blueSkyService] = useState(() => new BlueSkyService());
     const [twitterService] = useState(() => new TwitterService());
+    const [linkedInService] = useState(() => new LinkedInService());
 
 
     // This map links a platform ID to the function that starts its connection process.
@@ -106,9 +108,17 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
             }
 
         },
+        linkedin: async () => {
+            const url = await linkedInService.getLoginUrl();
+            if(url) {
+                window.location.href = url;
+            } else {
+                alert("Could not connect to LinkedIn at this time. Please try again later.");
+            }
+        }
 
         // linkedin: () => { linkedinService.login(); }
-    }), [twitterService]); // Dependency array ensures this object is stable.
+    }), [linkedInService, twitterService]); // Dependency array ensures this object is stable.
 
 
     const handleUserTriggeredConnect = (platformId: string) => {
@@ -153,11 +163,16 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
                 handleInitConnect('twitter', isConnected);
             }
 
+            if (platforms.linkedin.isAdded) {
+                const { isConnected } = await linkedInService.getStatus();
+                handleInitConnect('linkedin', isConnected)
+            }
+
             setIsAppLoading(false);
         };
         initConnections();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isPending, blueSkyService, twitterService]);
+    }, [isPending, blueSkyService, twitterService, linkedInService]);
 
 
     // SAVE ADDED PLATFORMS
@@ -238,6 +253,7 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
         handleAddPlatform,
         handleBlueSkyLogin,
         blueSkyService,
-        twitterService
+        twitterService,
+        linkedInService
         };
 }

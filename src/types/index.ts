@@ -29,8 +29,21 @@ export const DB_KEYS = {
     // Prefixes for Twitter
     TWITTER_PKCE: 'twitter_pkce',
     TWITTER_TOKENS: 'twitter_tokens',
+
+    // Prefixes for LinkedIn
+    LINKEDIN_CODES: 'linkedin_codes',
+    LINKEDIN_TOKENS: 'linkedin_tokens',
 }
 
+export interface LinkedInTokens {
+    accessToken: string;
+    personUrn: string; // The user's unique LinkedIn ID, e.g., "urn:li:person:xxxx"
+    expiresAt: number;
+}
+
+export interface LinkedInAuthCodes {
+    stateToken: string;
+}
 
 export interface SocialPost {
   text: string;
@@ -64,7 +77,6 @@ export interface PlatformState {
 export interface Platforms {
   [key: string]: PlatformState
 }
-
 
 
 export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
