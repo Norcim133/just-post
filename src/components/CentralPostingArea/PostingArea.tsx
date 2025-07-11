@@ -14,8 +14,8 @@ const PostingArea = ({ selectedPlatforms, postText, isPosting, readyToPost, onTe
 
     return (
     // Main Content Area
-      <div className="flex-1 flex flex-col max-w-3xl mx-auto">
-        <div className="flex-1 p-8">
+      <div className="flex-1 flex flex-col max-w-3xl mx-auto justify-center">
+        <div className="p-8">
           {/* Post Composer */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-lg shadow-slate-200/20">
             <div className="p-8">
