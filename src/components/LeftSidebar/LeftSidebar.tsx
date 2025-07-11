@@ -18,7 +18,7 @@ const LeftSidebar = ({ addedPlatforms, onAddAccountClick, onTogglePlatform, onCo
   const { data: isAuthenticated } = authClient.useSession();
 
   return (
-      <div className="w-72 bg-white shadow-sm border-r border-slate-100 flex flex-col" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif' }}>
+      <div className="w-1/5 bg-white shadow-sm border-r border-slate-100 flex flex-col" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif' }}>
         
         {/* Add Account Button */}
         <div className="p-6 pb-4">
