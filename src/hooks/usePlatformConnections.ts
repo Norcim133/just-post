@@ -129,7 +129,6 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
             }
         }
 
-        // linkedin: () => { linkedinService.login(); }
     }), [linkedInService, twitterService, threadsService]); // Dependency array ensures this object is stable.
 
 
@@ -149,44 +148,33 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
             return; // Exit early if auth is still working.
         }
 
-        const handleInitConnect = (platformId: string, isConnected: boolean) => {
-            setPlatforms(prev => ({
-                ...prev,
-                [platformId]: {
-                    ...prev[platformId],
-                    isConnected: isConnected,
-                }
-            }));
-        }
-
         const initConnections = async () => {
-            setIsAppLoading(true);
             
-            // BLUESKY
-            if (platforms.bluesky.isAdded) {
-                // getStatus method calls our backend
-                const { isConnected } = await blueSkyService.getStatus();
-                handleInitConnect('bluesky', isConnected);
-            }
+            const statusChecks = Object.values(platforms)
+                .filter(p => p.isAdded)
+                .map(async p => {
+                    switch (p.id) {
+                        case 'bluesky': return blueSkyService.getStatus().then(res => ({ id: 'bluesky', ...res }));
+                        case 'twitter': return twitterService.getStatus().then(res => ({ id: 'twitter', ...res }));
+                        case 'linkedin': return linkedInService.getStatus().then(res => ({ id: 'linkedin', ...res }));
+                        case 'threads': return threadsService.getStatus().then(res => ({ id: 'threads', ...res }));
+                        default: return Promise.resolve(null);
+                    }
+                });
 
-            // TWITTER
-            if (platforms.twitter.isAdded) {
-                const { isConnected } = await twitterService.getStatus();
-                handleInitConnect('twitter', isConnected);
-            }
+            // 2. Run all the network requests in parallel.
+            const results = await Promise.all(statusChecks);
+
+            setPlatforms(prev => {
+                const newPlatforms = { ...prev };
+                results.forEach(result => {
+                    if (result) {
+                        newPlatforms[result.id].isConnected = result.isConnected;
+                    }
+                });
+                return newPlatforms;
+            });
             
-            // LINKEDIN
-            if (platforms.linkedin.isAdded) {
-                const { isConnected } = await linkedInService.getStatus();
-                handleInitConnect('linkedin', isConnected)
-            }
-
-            // THREADS
-            if (platforms.threads.isAdded) {
-                const { isConnected } = await threadsService.getStatus();
-                handleInitConnect('threads', isConnected);
-            }
-
             setIsAppLoading(false);
         };
         initConnections();
