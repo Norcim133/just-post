@@ -31,7 +31,7 @@ const PostingArea = ({ selectedPlatforms, postText, isPosting, readyToPost, onTe
               <div className="flex justify-between items-center mt-6 pt-6 border-t border-slate-100">
                 <div className="flex items-center gap-6">
                   <span className="text-sm font-medium text-slate-500">
-                    {postText.length}/300
+                    {postText.length}/300+
                   </span>
                 </div>
                 
