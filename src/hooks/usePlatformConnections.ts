@@ -4,6 +4,7 @@ import { BlueSkyService } from '../clients/bluesky';
 import { BlueSkyCredentials } from '../types';
 import { TwitterService } from '../clients/twitter';
 import { LinkedInService } from '../clients/linkedin'
+import { ThreadsService } from '../clients/threads';
 import { authClient } from '../clients/authClient';
 
 import { getPlatformsAdded, getPlatformSelections, savePlatformAdditions, savePlatformSelections } from '../clients/storage';
@@ -21,6 +22,7 @@ export interface UsePlatformConnectionsReturn {
   blueSkyService: BlueSkyService;
   twitterService: TwitterService;
   linkedInService: LinkedInService;
+  threadsService: ThreadsService;
 }
 
 const getInitialState = (): Platforms => {
@@ -90,6 +92,7 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
     const [blueSkyService] = useState(() => new BlueSkyService());
     const [twitterService] = useState(() => new TwitterService());
     const [linkedInService] = useState(() => new LinkedInService());
+    const [threadsService] = useState(() => new ThreadsService());
 
 
     // This map links a platform ID to the function that starts its connection process.
@@ -115,10 +118,19 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
             } else {
                 alert("Could not connect to LinkedIn at this time. Please try again later.");
             }
+        },
+
+        threads: async () => {
+            const url = await threadsService.getLoginUrl();
+            if(url) {
+                window.location.href = url;
+            } else {
+                alert("Could not connect to Threads at this time. Please try again later.");
+            }
         }
 
         // linkedin: () => { linkedinService.login(); }
-    }), [linkedInService, twitterService]); // Dependency array ensures this object is stable.
+    }), [linkedInService, twitterService, threadsService]); // Dependency array ensures this object is stable.
 
 
     const handleUserTriggeredConnect = (platformId: string) => {
@@ -162,17 +174,24 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
                 const { isConnected } = await twitterService.getStatus();
                 handleInitConnect('twitter', isConnected);
             }
-
+            
+            // LINKEDIN
             if (platforms.linkedin.isAdded) {
                 const { isConnected } = await linkedInService.getStatus();
                 handleInitConnect('linkedin', isConnected)
+            }
+
+            // THREADS
+            if (platforms.threads.isAdded) {
+                const { isConnected } = await threadsService.getStatus();
+                handleInitConnect('threads', isConnected);
             }
 
             setIsAppLoading(false);
         };
         initConnections();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isPending, blueSkyService, twitterService, linkedInService]);
+    }, [isPending, blueSkyService, twitterService, linkedInService, threadsService]);
 
 
     // SAVE ADDED PLATFORMS
@@ -254,6 +273,7 @@ export function usePlatformConnections(): UsePlatformConnectionsReturn {
         handleBlueSkyLogin,
         blueSkyService,
         twitterService,
-        linkedInService
+        linkedInService,
+        threadsService
         };
 }

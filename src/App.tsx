@@ -4,6 +4,11 @@ import SocialPostingInterface from './components/SocialPostingInterface';
 import { LoginPage } from './pages/LoginPage';
 import { authClient } from './clients/authClient';
 
+//TODO: Do better status check for LinkedIn... possibly others
+//TOOD: Add logout to all
+//TODO: Refactor state token for twitter/bluesky as we no longer need justpost given no href
+//TODO: Do central generateStateToken?
+//TODO: Handle overflow for previews
 //TODO: Center the chat box more vertically
 //TODO: Add Threads, Notes
 //TODO: Add the ad link

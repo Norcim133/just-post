@@ -13,7 +13,6 @@ function _generateStateToken(): string {
     return `linkedin-${randomBytes(16).toString('hex')}`;
 }
 
-// --- Service Functions ---
 
 export async function startLoginProcess(userId: string): Promise<string | null> {
     if (!CLIENT_ID || !CLIENT_SECRET || !CALLBACK_URI) {
@@ -23,7 +22,7 @@ export async function startLoginProcess(userId: string): Promise<string | null> 
         const state = _generateStateToken();
 
         const data: LinkedInAuthCodes = { stateToken: state };
-        await setValueEx(DB_KEYS.LINKEDIN_CODES, userId, data, 600); // 10-minute expiry
+        await setValueEx(DB_KEYS.LINKEDIN_CODES, userId, data, 500); // 5-minute expiry
 
         const params = new URLSearchParams({
             response_type: 'code',
@@ -49,7 +48,6 @@ export async function handleLinkedInCallback(code: string, state: string, userId
     if (!storedCodes || storedCodes.stateToken !== state) {
         throw new Error('Invalid state token or session expired.');
     }
-    console.error(CALLBACK_URI, CLIENT_ID, CLIENT_SECRET)
 
     const params = new URLSearchParams({
         grant_type: 'authorization_code',

@@ -22,7 +22,8 @@ const SocialPostingInterface = () => {
         handleBlueSkyLogin,
         blueSkyService,
         twitterService,
-        linkedInService
+        linkedInService,
+        threadsService
     } = usePlatformConnections();
 
 
@@ -45,6 +46,7 @@ const SocialPostingInterface = () => {
         bluesky: blueSkyService,
         twitter: twitterService,
         linkedin: linkedInService,
+        threads: threadsService,
     };
 
     const postPromises = selectedPlatforms
